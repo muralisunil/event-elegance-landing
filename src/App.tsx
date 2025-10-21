@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import PlanEvent from "./pages/PlanEvent";
 import BrowseEvents from "./pages/BrowseEvents";
+import RSVPEvent from "./pages/RSVPEvent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/plan-event" element={<PlanEvent />} />
           <Route path="/browse-events" element={<BrowseEvents />} />
+          <Route path="/rsvp" element={<RSVPEvent />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

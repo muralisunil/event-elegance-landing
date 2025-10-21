@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Calendar, Ticket } from "lucide-react";
+import { Calendar, Ticket, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Welcome = () => {
@@ -17,7 +17,7 @@ const Welcome = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Book Tickets Card */}
           <button
             onClick={() => navigate("/browse-events")}
@@ -53,6 +53,26 @@ const Welcome = () => {
                 </h2>
                 <p className="text-white/80 text-lg">
                   Create and manage your personal, commercial or corporate events
+                </p>
+              </div>
+            </div>
+          </button>
+
+          {/* RSVP Card */}
+          <button
+            onClick={() => navigate("/rsvp")}
+            className="group relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border-2 border-white/20 p-12 hover:bg-white/15 hover:border-white/40 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="flex flex-col items-center text-center space-y-6">
+              <div className="w-24 h-24 rounded-full bg-secondary/30 flex items-center justify-center group-hover:bg-secondary/40 transition-colors">
+                <Mail className="w-12 h-12 text-white" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-3">
+                  RSVP
+                </h2>
+                <p className="text-white/80 text-lg">
+                  Confirm your presence to invite-only events
                 </p>
               </div>
             </div>
