@@ -22,6 +22,7 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
     location: event.location || "",
     event_date: event.event_date || "",
     event_time: event.event_time || "",
+    duration_minutes: event.duration_minutes || "",
     max_guests: event.max_guests || "",
     is_unlimited_guests: event.is_unlimited_guests || false,
     allow_accompanies: event.allow_accompanies || false,
@@ -41,6 +42,7 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
       location: formData.location,
       event_date: formData.event_date,
       event_time: formData.event_time,
+      duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes as string) : null,
       max_guests: formData.is_unlimited_guests ? null : (formData.max_guests ? parseInt(formData.max_guests) : null),
       is_unlimited_guests: formData.is_unlimited_guests,
       allow_accompanies: formData.allow_accompanies,
@@ -148,6 +150,21 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
                 onChange={(e) => setFormData({ ...formData, event_time: e.target.value })}
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="duration_minutes">Duration (minutes)</Label>
+            <Input
+              id="duration_minutes"
+              type="number"
+              min="1"
+              placeholder="e.g., 120 for 2 hours"
+              value={formData.duration_minutes}
+              onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              How long will the event last?
+            </p>
           </div>
 
           <div className="space-y-4 border-t pt-4">

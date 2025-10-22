@@ -175,6 +175,7 @@ export type Database = {
           allow_accompanies: boolean
           created_at: string
           description: string | null
+          duration_minutes: number | null
           event_date: string
           event_time: string
           event_types: Database["public"]["Enums"]["outreach_event_type"][]
@@ -193,6 +194,7 @@ export type Database = {
           allow_accompanies?: boolean
           created_at?: string
           description?: string | null
+          duration_minutes?: number | null
           event_date: string
           event_time: string
           event_types: Database["public"]["Enums"]["outreach_event_type"][]
@@ -211,6 +213,7 @@ export type Database = {
           allow_accompanies?: boolean
           created_at?: string
           description?: string | null
+          duration_minutes?: number | null
           event_date?: string
           event_time?: string
           event_types?: Database["public"]["Enums"]["outreach_event_type"][]

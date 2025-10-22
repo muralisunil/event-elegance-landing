@@ -120,6 +120,15 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
             <p className="text-muted-foreground">{event.location}</p>
           </div>
           
+          {event.duration_minutes && (
+            <div>
+              <h3 className="font-semibold mb-2">Duration</h3>
+              <p className="text-muted-foreground">
+                {Math.floor(event.duration_minutes / 60)}h {event.duration_minutes % 60}m
+              </p>
+            </div>
+          )}
+          
           <div>
             <h3 className="font-semibold mb-2">Event Types</h3>
             <div className="flex flex-wrap gap-2">

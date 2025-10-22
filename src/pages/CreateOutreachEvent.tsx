@@ -31,6 +31,7 @@ const CreateOutreachEvent = () => {
     name: "",
     eventDate: "",
     eventTime: "",
+    duration: "",
     location: "",
     description: "",
     purpose: "",
@@ -95,6 +96,7 @@ const CreateOutreachEvent = () => {
         event_types: selectedTypes as any,
         event_date: formData.eventDate,
         event_time: formData.eventTime,
+        duration_minutes: formData.duration ? parseInt(formData.duration) : null,
         location: formData.location,
         description: formData.description,
         purpose: formData.purpose,
@@ -216,6 +218,23 @@ const CreateOutreachEvent = () => {
                         required
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      min="1"
+                      placeholder="e.g., 120 for 2 hours"
+                      value={formData.duration}
+                      onChange={(e) =>
+                        setFormData({ ...formData, duration: e.target.value })
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      How long will the event last?
+                    </p>
                   </div>
 
                   <div className="space-y-2">
