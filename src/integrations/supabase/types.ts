@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       outreach_events: {
         Row: {
+          allow_accompanies: boolean
           created_at: string
           description: string | null
           event_date: string
@@ -23,13 +24,17 @@ export type Database = {
           event_types: Database["public"]["Enums"]["outreach_event_type"][]
           goal: string | null
           id: string
+          is_unlimited_guests: boolean
           location: string
+          max_accompanies_per_guest: number | null
+          max_guests: number | null
           name: string
           purpose: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          allow_accompanies?: boolean
           created_at?: string
           description?: string | null
           event_date: string
@@ -37,13 +42,17 @@ export type Database = {
           event_types: Database["public"]["Enums"]["outreach_event_type"][]
           goal?: string | null
           id?: string
+          is_unlimited_guests?: boolean
           location: string
+          max_accompanies_per_guest?: number | null
+          max_guests?: number | null
           name: string
           purpose?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          allow_accompanies?: boolean
           created_at?: string
           description?: string | null
           event_date?: string
@@ -51,7 +60,10 @@ export type Database = {
           event_types?: Database["public"]["Enums"]["outreach_event_type"][]
           goal?: string | null
           id?: string
+          is_unlimited_guests?: boolean
           location?: string
+          max_accompanies_per_guest?: number | null
+          max_guests?: number | null
           name?: string
           purpose?: string | null
           updated_at?: string

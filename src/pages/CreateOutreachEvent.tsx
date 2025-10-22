@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Users, Ticket } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const outreachEventTypes = [
   { value: "workshop", label: "Workshop" },
@@ -34,6 +35,10 @@ const CreateOutreachEvent = () => {
     description: "",
     purpose: "",
     goal: "",
+    maxGuests: "",
+    isUnlimitedGuests: false,
+    allowAccompanies: false,
+    maxAccompaniesPerGuest: "1",
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -59,6 +64,27 @@ const CreateOutreachEvent = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Validate guest settings
+    if (!formData.isUnlimitedGuests && (!formData.maxGuests || parseInt(formData.maxGuests) < 1)) {
+      toast({
+        title: "Validation Error",
+        description: "Please specify maximum guests or enable unlimited guests",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (formData.allowAccompanies && (!formData.maxAccompaniesPerGuest || parseInt(formData.maxAccompaniesPerGuest) < 1)) {
+      toast({
+        title: "Validation Error",
+        description: "Please specify maximum companions per guest",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
@@ -73,6 +99,10 @@ const CreateOutreachEvent = () => {
         description: formData.description,
         purpose: formData.purpose,
         goal: formData.goal,
+        max_guests: formData.isUnlimitedGuests ? null : parseInt(formData.maxGuests),
+        is_unlimited_guests: formData.isUnlimitedGuests,
+        allow_accompanies: formData.allowAccompanies,
+        max_accompanies_per_guest: formData.allowAccompanies ? parseInt(formData.maxAccompaniesPerGuest) : null,
       }]);
 
       if (error) throw error;
@@ -199,6 +229,121 @@ const CreateOutreachEvent = () => {
                       required
                     />
                   </div>
+
+                  {/* Guest Management Section */}
+                  <Card className="border-dashed">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Guest Management
+                      </CardTitle>
+                      <CardDescription>
+                        Configure guest capacity and accompanies policy
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Guest Capacity */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Guest Capacity
+                        </h4>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="unlimitedGuests"
+                            checked={formData.isUnlimitedGuests}
+                            onCheckedChange={(checked) =>
+                              setFormData({
+                                ...formData,
+                                isUnlimitedGuests: checked === true,
+                                maxGuests: checked === true ? "" : formData.maxGuests,
+                              })
+                            }
+                          />
+                          <Label
+                            htmlFor="unlimitedGuests"
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            Unlimited guests
+                          </Label>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="maxGuests">
+                            Maximum Guests {!formData.isUnlimitedGuests && "*"}
+                          </Label>
+                          <Input
+                            id="maxGuests"
+                            type="number"
+                            min="1"
+                            placeholder="Enter maximum capacity (e.g., 100)"
+                            value={formData.maxGuests}
+                            onChange={(e) =>
+                              setFormData({ ...formData, maxGuests: e.target.value })
+                            }
+                            disabled={formData.isUnlimitedGuests}
+                            required={!formData.isUnlimitedGuests}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {formData.isUnlimitedGuests
+                              ? "No limit on attendees"
+                              : "Specify the maximum number of guests allowed"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Accompanies Policy */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <Ticket className="h-4 w-4" />
+                          Accompanies Policy
+                        </h4>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="allowAccompanies"
+                            checked={formData.allowAccompanies}
+                            onCheckedChange={(checked) =>
+                              setFormData({
+                                ...formData,
+                                allowAccompanies: checked === true,
+                                maxAccompaniesPerGuest: checked === true ? "1" : "1",
+                              })
+                            }
+                          />
+                          <Label
+                            htmlFor="allowAccompanies"
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            Allow guests to bring companions (plus-ones)
+                          </Label>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="maxAccompaniesPerGuest">
+                            Maximum companions per guest {formData.allowAccompanies && "*"}
+                          </Label>
+                          <Input
+                            id="maxAccompaniesPerGuest"
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={formData.maxAccompaniesPerGuest}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                maxAccompaniesPerGuest: e.target.value,
+                              })
+                            }
+                            disabled={!formData.allowAccompanies}
+                            required={formData.allowAccompanies}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {formData.allowAccompanies
+                              ? "How many additional guests can each invitee bring?"
+                              : "Guests cannot bring companions"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
