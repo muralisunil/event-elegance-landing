@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      outreach_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_date: string
+          event_time: string
+          event_types: Database["public"]["Enums"]["outreach_event_type"][]
+          goal: string | null
+          id: string
+          location: string
+          name: string
+          purpose: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_date: string
+          event_time: string
+          event_types: Database["public"]["Enums"]["outreach_event_type"][]
+          goal?: string | null
+          id?: string
+          location: string
+          name: string
+          purpose?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          event_time?: string
+          event_types?: Database["public"]["Enums"]["outreach_event_type"][]
+          goal?: string | null
+          id?: string
+          location?: string
+          name?: string
+          purpose?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +67,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      outreach_event_type:
+        | "workshop"
+        | "seminar"
+        | "community_service"
+        | "awareness_campaign"
+        | "fundraiser"
+        | "networking"
+        | "training"
+        | "volunteer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +202,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      outreach_event_type: [
+        "workshop",
+        "seminar",
+        "community_service",
+        "awareness_campaign",
+        "fundraiser",
+        "networking",
+        "training",
+        "volunteer",
+      ],
+    },
   },
 } as const

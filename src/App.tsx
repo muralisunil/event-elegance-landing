@@ -7,6 +7,9 @@ import Index from "./pages/Index";
 import PlanEvent from "./pages/PlanEvent";
 import BrowseEvents from "./pages/BrowseEvents";
 import RSVPEvent from "./pages/RSVPEvent";
+import Auth from "./pages/Auth";
+import OutreachEvents from "./pages/OutreachEvents";
+import CreateOutreachEvent from "./pages/CreateOutreachEvent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +25,9 @@ const App = () => (
           <Route path="/plan-event" element={<PlanEvent />} />
           <Route path="/browse-events" element={<BrowseEvents />} />
           <Route path="/rsvp" element={<RSVPEvent />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/outreach-events" element={<OutreachEvents />} />
+          <Route path="/create-outreach-event" element={<CreateOutreachEvent />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
