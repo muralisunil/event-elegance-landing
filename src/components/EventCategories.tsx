@@ -1,6 +1,7 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Briefcase, Building2 } from "lucide-react";
+import { Heart, Briefcase, Building2, Target } from "lucide-react";
 
 const categories = [
   {
@@ -8,22 +9,34 @@ const categories = [
     title: "Personal Events",
     description: "From intimate gatherings to milestone celebrations, create unforgettable memories with your loved ones.",
     features: ["Weddings & Anniversaries", "Birthday Parties", "Family Reunions", "Private Celebrations"],
+    link: "/browse-events",
   },
   {
     icon: Briefcase,
     title: "Commercial Events",
     description: "Showcase your brand and connect with your audience through impactful commercial experiences.",
     features: ["Product Launches", "Trade Shows", "Brand Activations", "Retail Events"],
+    link: "/browse-events",
   },
   {
     icon: Building2,
     title: "Corporate Events",
     description: "Professional venues and services for your business events that inspire and engage.",
     features: ["Conferences & Seminars", "Team Building", "Annual Meetings", "Executive Retreats"],
+    link: "/browse-events",
+  },
+  {
+    icon: Target,
+    title: "Outreach Events",
+    description: "Plan and organize community outreach initiatives with specific goals and impact tracking.",
+    features: ["Community Programs", "Workshops & Seminars", "Volunteer Events", "Educational Outreach"],
+    link: "/auth",
   },
 ];
 
 const EventCategories = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -34,7 +47,7 @@ const EventCategories = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {categories.map((category, index) => (
             <Card key={index} className="border-border hover:shadow-lg transition-shadow">
               <CardHeader>
@@ -53,7 +66,7 @@ const EventCategories = () => {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" variant="outline">
+                <Button className="w-full" variant="outline" onClick={() => navigate(category.link)}>
                   Explore {category.title}
                 </Button>
               </CardContent>
