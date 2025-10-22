@@ -87,24 +87,33 @@ const OutreachEvents = () => {
           ))}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          {format(new Date(event.event_date), "PPP")} at {event.event_time}
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4" />
-          {event.location}
-        </div>
-        {event.goal && (
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Target className="h-4 w-4" />
-            {event.goal}
+            <Calendar className="h-4 w-4" />
+            {format(new Date(event.event_date), "PPP")} at {event.event_time}
           </div>
-        )}
-        {event.description && (
-          <p className="text-sm mt-2">{event.description}</p>
-        )}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            {event.location}
+          </div>
+          {event.goal && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Target className="h-4 w-4" />
+              {event.goal}
+            </div>
+          )}
+          {event.description && (
+            <p className="text-sm mt-2">{event.description}</p>
+          )}
+        </div>
+        <Button 
+          onClick={() => navigate(`/manage-event/${event.id}`)} 
+          className="w-full"
+          variant="outline"
+        >
+          Manage Event
+        </Button>
       </CardContent>
     </Card>
   );

@@ -14,6 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
+      event_guests: {
+        Row: {
+          created_at: string | null
+          dietary_preferences: string | null
+          email: string
+          event_id: string
+          id: string
+          invitation_status: string | null
+          name: string
+          num_accompanies: number | null
+          phone: string | null
+          rsvp_date: string | null
+          special_requirements: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dietary_preferences?: string | null
+          email: string
+          event_id: string
+          id?: string
+          invitation_status?: string | null
+          name: string
+          num_accompanies?: number | null
+          phone?: string | null
+          rsvp_date?: string | null
+          special_requirements?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dietary_preferences?: string | null
+          email?: string
+          event_id?: string
+          id?: string
+          invitation_status?: string | null
+          name?: string
+          num_accompanies?: number | null
+          phone?: string | null
+          rsvp_date?: string | null
+          special_requirements?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_guests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_logistics: {
+        Row: {
+          actual_cost: number | null
+          category: string
+          created_at: string | null
+          estimated_cost: number | null
+          event_id: string
+          id: string
+          item_name: string
+          notes: string | null
+          quantity: number | null
+          status: string | null
+          updated_at: string | null
+          vendor: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          category: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          event_id: string
+          id?: string
+          item_name: string
+          notes?: string | null
+          quantity?: number | null
+          status?: string | null
+          updated_at?: string | null
+          vendor?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          category?: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          event_id?: string
+          id?: string
+          item_name?: string
+          notes?: string | null
+          quantity?: number | null
+          status?: string | null
+          updated_at?: string | null
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_logistics_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_schedules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_time: string
+          event_id: string
+          id: string
+          location: string | null
+          order_index: number
+          session_title: string
+          speaker: string | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          event_id: string
+          id?: string
+          location?: string | null
+          order_index?: number
+          session_title: string
+          speaker?: string | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          event_id?: string
+          id?: string
+          location?: string | null
+          order_index?: number
+          session_title?: string
+          speaker?: string | null
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_schedules_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_events: {
         Row: {
           allow_accompanies: boolean

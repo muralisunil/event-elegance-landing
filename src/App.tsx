@@ -10,6 +10,7 @@ import RSVPEvent from "./pages/RSVPEvent";
 import Auth from "./pages/Auth";
 import OutreachEvents from "./pages/OutreachEvents";
 import CreateOutreachEvent from "./pages/CreateOutreachEvent";
+import ManageEvent from "./pages/ManageEvent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/outreach-events" element={<OutreachEvents />} />
           <Route path="/create-outreach-event" element={<CreateOutreachEvent />} />
+          <Route path="/manage-event/:eventId" element={<ManageEvent />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

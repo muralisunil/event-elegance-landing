@@ -17,7 +17,7 @@ const Welcome = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Book Tickets Card */}
           <button
             onClick={() => navigate("/browse-events")}
@@ -73,26 +73,6 @@ const Welcome = () => {
                 </h2>
                 <p className="text-white/80 text-lg">
                   Confirm your presence to invite-only events
-                </p>
-              </div>
-            </div>
-          </button>
-
-          {/* Outreach Events Card */}
-          <button
-            onClick={() => navigate("/auth")}
-            className="group relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border-2 border-white/20 p-12 hover:bg-white/15 hover:border-white/40 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-          >
-            <div className="flex flex-col items-center text-center space-y-6">
-              <div className="w-24 h-24 rounded-full bg-secondary/30 flex items-center justify-center group-hover:bg-secondary/40 transition-colors">
-                <Calendar className="w-12 h-12 text-white" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-white mb-3">
-                  Outreach Events
-                </h2>
-                <p className="text-white/80 text-lg">
-                  Manage your community outreach initiatives
                 </p>
               </div>
             </div>

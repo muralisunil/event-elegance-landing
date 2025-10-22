@@ -89,7 +89,7 @@ const CreateOutreachEvent = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("outreach_events").insert([{
+      const { data, error } = await supabase.from("outreach_events").insert([{
         user_id: user.id,
         name: formData.name,
         event_types: selectedTypes as any,
@@ -103,7 +103,7 @@ const CreateOutreachEvent = () => {
         is_unlimited_guests: formData.isUnlimitedGuests,
         allow_accompanies: formData.allowAccompanies,
         max_accompanies_per_guest: formData.allowAccompanies ? parseInt(formData.maxAccompaniesPerGuest) : null,
-      }]);
+      }]).select().single();
 
       if (error) throw error;
 
@@ -111,7 +111,7 @@ const CreateOutreachEvent = () => {
         title: "Success",
         description: "Outreach event created successfully!",
       });
-      navigate("/outreach-events");
+      navigate(`/manage-event/${data.id}`);
     } catch (error: any) {
       toast({
         title: "Error",
