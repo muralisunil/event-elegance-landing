@@ -30,7 +30,7 @@ const categories = [
     title: "Outreach Events",
     description: "Plan and organize community outreach initiatives with specific goals and impact tracking.",
     features: ["Community Programs", "Workshops & Seminars", "Volunteer Events", "Educational Outreach"],
-    link: "/auth",
+    link: "/create-outreach-event",
   },
 ];
 
@@ -67,7 +67,7 @@ const EventCategories = () => {
                   ))}
                 </ul>
                 <Button className="w-full" variant="outline" onClick={() => navigate(category.link)}>
-                  Explore {category.title}
+                  Create
                 </Button>
               </CardContent>
             </Card>

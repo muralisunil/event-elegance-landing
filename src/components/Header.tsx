@@ -21,8 +21,8 @@ const Header = () => {
           <Link to="#corporate" className="text-foreground hover:text-primary transition-colors">
             Corporate
           </Link>
-          <Link to="#about" className="text-foreground hover:text-primary transition-colors">
-            About Us
+          <Link to="/outreach-events" className="text-foreground hover:text-primary transition-colors">
+            Outreach
           </Link>
         </nav>
         
