@@ -12,6 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Check, Users, Ticket } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DurationSelector } from "@/components/event/DurationSelector";
+import { validateEventDates, calculateEndTime, formatDateForInput, getMinEventDate, getMaxEventDate } from "@/lib/utils";
 
 const outreachEventTypes = [
   { value: "workshop", label: "Workshop" },
@@ -19,9 +22,36 @@ const outreachEventTypes = [
   { value: "community_service", label: "Community Service" },
   { value: "awareness_campaign", label: "Awareness Campaign" },
   { value: "fundraiser", label: "Fundraiser" },
-  { value: "networking", label: "Networking" },
-  { value: "training", label: "Training" },
-  { value: "volunteer", label: "Volunteer" },
+  { value: "networking", label: "Networking Event" },
+  { value: "training", label: "Training Session" },
+  { value: "volunteer", label: "Volunteer Activity" },
+  { value: "conference", label: "Conference" },
+  { value: "webinar", label: "Webinar" },
+  { value: "hackathon", label: "Hackathon" },
+  { value: "meetup", label: "Meetup" },
+  { value: "exhibition", label: "Exhibition" },
+  { value: "panel_discussion", label: "Panel Discussion" },
+  { value: "town_hall", label: "Town Hall" },
+  { value: "open_house", label: "Open House" },
+  { value: "career_fair", label: "Career Fair" },
+  { value: "health_screening", label: "Health Screening" },
+  { value: "blood_donation", label: "Blood Donation" },
+  { value: "food_drive", label: "Food Drive" },
+  { value: "mentorship_program", label: "Mentorship Program" },
+  { value: "educational_tour", label: "Educational Tour" },
+  { value: "sports_event", label: "Sports Event" },
+  { value: "cultural_event", label: "Cultural Event" },
+  { value: "charity_auction", label: "Charity Auction" },
+];
+
+const ageRestrictions = [
+  { value: "all_ages", label: "All Ages Welcome" },
+  { value: "18+", label: "18+ (Adults Only)" },
+  { value: "21+", label: "21+ (Legal Drinking Age)" },
+  { value: "children_only", label: "Children Only (Under 13)" },
+  { value: "teens_only", label: "Teens Only (13-17)" },
+  { value: "adults_only", label: "Adults Only (18+)" },
+  { value: "seniors_only", label: "Seniors Only (60+)" },
 ];
 
 const CreateOutreachEvent = () => {
@@ -31,11 +61,16 @@ const CreateOutreachEvent = () => {
     name: "",
     eventDate: "",
     eventTime: "",
-    duration: "",
+    durationHours: "2",
+    durationMinutes: "0",
+    endTime: "",
+    isMultiDay: false,
+    endDate: "",
     location: "",
     description: "",
     purpose: "",
     goal: "",
+    ageRestriction: "all_ages",
     maxGuests: "",
     isUnlimitedGuests: false,
     allowAccompanies: false,
@@ -65,6 +100,40 @@ const CreateOutreachEvent = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Validate dates
+    const dateValidation = validateEventDates(formData.eventDate, formData.endDate, formData.isMultiDay);
+    if (!dateValidation.valid) {
+      toast({
+        title: "Invalid Date",
+        description: dateValidation.error,
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Validate multi-day event requirements
+    if (formData.isMultiDay) {
+      if (!formData.endDate) {
+        toast({
+          title: "Missing End Date",
+          description: "Multi-day events must have an end date",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      if (!formData.endTime) {
+        toast({
+          title: "Missing End Time",
+          description: "Multi-day events must have an end time",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+    }
+
     // Validate guest settings
     if (!formData.isUnlimitedGuests && (!formData.maxGuests || parseInt(formData.maxGuests) < 1)) {
       toast({
@@ -90,14 +159,32 @@ const CreateOutreachEvent = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Calculate duration for single-day events
+      const durationMinutes = formData.isMultiDay 
+        ? null 
+        : parseInt(formData.durationHours) * 60 + parseInt(formData.durationMinutes);
+
+      // Calculate end time for single-day events if not manually set
+      const endTime = formData.isMultiDay
+        ? formData.endTime
+        : formData.endTime || calculateEndTime(
+            formData.eventTime,
+            parseInt(formData.durationHours),
+            parseInt(formData.durationMinutes)
+          );
+
       const { data, error } = await supabase.from("outreach_events").insert([{
         user_id: user.id,
         name: formData.name,
         event_types: selectedTypes as any,
         event_date: formData.eventDate,
         event_time: formData.eventTime,
-        duration_minutes: formData.duration ? parseInt(formData.duration) : null,
+        duration_minutes: durationMinutes,
+        event_end_date: formData.isMultiDay ? formData.endDate : null,
+        event_end_time: endTime,
+        is_multi_day: formData.isMultiDay,
         location: formData.location,
+        age_restriction: formData.ageRestriction,
         description: formData.description,
         purpose: formData.purpose,
         goal: formData.goal,
@@ -195,11 +282,13 @@ const CreateOutreachEvent = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="eventDate">Date *</Label>
+                      <Label htmlFor="eventDate">Event Date *</Label>
                       <Input
                         id="eventDate"
                         type="date"
                         value={formData.eventDate}
+                        min={formatDateForInput(getMinEventDate())}
+                        max={formatDateForInput(getMaxEventDate())}
                         onChange={(e) =>
                           setFormData({ ...formData, eventDate: e.target.value })
                         }
@@ -207,7 +296,7 @@ const CreateOutreachEvent = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="eventTime">Time *</Label>
+                      <Label htmlFor="eventTime">Start Time *</Label>
                       <Input
                         id="eventTime"
                         type="time"
@@ -220,22 +309,88 @@ const CreateOutreachEvent = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (minutes)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      min="1"
-                      placeholder="e.g., 120 for 2 hours"
-                      value={formData.duration}
-                      onChange={(e) =>
-                        setFormData({ ...formData, duration: e.target.value })
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="isMultiDay"
+                      checked={formData.isMultiDay}
+                      onCheckedChange={(checked) =>
+                        setFormData({ 
+                          ...formData, 
+                          isMultiDay: checked as boolean,
+                          endDate: "",
+                          endTime: "",
+                        })
                       }
                     />
-                    <p className="text-xs text-muted-foreground">
-                      How long will the event last?
-                    </p>
+                    <Label htmlFor="isMultiDay" className="cursor-pointer">
+                      This is a multi-day event
+                    </Label>
                   </div>
+
+                  {formData.isMultiDay ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="endDate">End Date *</Label>
+                          <Input
+                            id="endDate"
+                            type="date"
+                            value={formData.endDate}
+                            min={formData.eventDate || formatDateForInput(getMinEventDate())}
+                            max={formatDateForInput(getMaxEventDate())}
+                            onChange={(e) =>
+                              setFormData({ ...formData, endDate: e.target.value })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="endTime">End Time *</Label>
+                          <Input
+                            id="endTime"
+                            type="time"
+                            value={formData.endTime}
+                            onChange={(e) =>
+                              setFormData({ ...formData, endTime: e.target.value })
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Multi-day events require an end date and time. Duration is not applicable.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <DurationSelector
+                        startTime={formData.eventTime}
+                        durationHours={formData.durationHours}
+                        durationMinutes={formData.durationMinutes}
+                        onHoursChange={(value) =>
+                          setFormData({ ...formData, durationHours: value })
+                        }
+                        onMinutesChange={(value) =>
+                          setFormData({ ...formData, durationMinutes: value })
+                        }
+                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="endTime">End Time (optional - auto-calculated)</Label>
+                        <Input
+                          id="endTime"
+                          type="time"
+                          value={formData.endTime}
+                          onChange={(e) =>
+                            setFormData({ ...formData, endTime: e.target.value })
+                          }
+                          placeholder="Leave empty for auto-calculation"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Leave empty to auto-calculate from duration, or manually set a custom end time
+                        </p>
+                      </div>
+                    </>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="location">Location *</Label>
@@ -397,6 +552,27 @@ const CreateOutreachEvent = () => {
                         setFormData({ ...formData, goal: e.target.value })
                       }
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="ageRestriction">Age Restrictions</Label>
+                    <Select
+                      value={formData.ageRestriction}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, ageRestriction: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select age restriction" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ageRestrictions.map((restriction) => (
+                          <SelectItem key={restriction.value} value={restriction.value}>
+                            {restriction.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <Button type="submit" className="w-full" disabled={loading}>

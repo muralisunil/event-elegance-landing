@@ -172,15 +172,19 @@ export type Database = {
       }
       outreach_events: {
         Row: {
+          age_restriction: string | null
           allow_accompanies: boolean
           created_at: string
           description: string | null
           duration_minutes: number | null
           event_date: string
+          event_end_date: string | null
+          event_end_time: string | null
           event_time: string
           event_types: Database["public"]["Enums"]["outreach_event_type"][]
           goal: string | null
           id: string
+          is_multi_day: boolean | null
           is_unlimited_guests: boolean
           location: string
           max_accompanies_per_guest: number | null
@@ -191,15 +195,19 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          age_restriction?: string | null
           allow_accompanies?: boolean
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
           event_date: string
+          event_end_date?: string | null
+          event_end_time?: string | null
           event_time: string
           event_types: Database["public"]["Enums"]["outreach_event_type"][]
           goal?: string | null
           id?: string
+          is_multi_day?: boolean | null
           is_unlimited_guests?: boolean
           location: string
           max_accompanies_per_guest?: number | null
@@ -210,15 +218,19 @@ export type Database = {
           user_id: string
         }
         Update: {
+          age_restriction?: string | null
           allow_accompanies?: boolean
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
           event_date?: string
+          event_end_date?: string | null
+          event_end_time?: string | null
           event_time?: string
           event_types?: Database["public"]["Enums"]["outreach_event_type"][]
           goal?: string | null
           id?: string
+          is_multi_day?: boolean | null
           is_unlimited_guests?: boolean
           location?: string
           max_accompanies_per_guest?: number | null
@@ -247,6 +259,23 @@ export type Database = {
         | "networking"
         | "training"
         | "volunteer"
+        | "conference"
+        | "webinar"
+        | "hackathon"
+        | "meetup"
+        | "exhibition"
+        | "panel_discussion"
+        | "town_hall"
+        | "open_house"
+        | "career_fair"
+        | "health_screening"
+        | "blood_donation"
+        | "food_drive"
+        | "mentorship_program"
+        | "educational_tour"
+        | "sports_event"
+        | "cultural_event"
+        | "charity_auction"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -383,6 +412,23 @@ export const Constants = {
         "networking",
         "training",
         "volunteer",
+        "conference",
+        "webinar",
+        "hackathon",
+        "meetup",
+        "exhibition",
+        "panel_discussion",
+        "town_hall",
+        "open_house",
+        "career_fair",
+        "health_screening",
+        "blood_donation",
+        "food_drive",
+        "mentorship_program",
+        "educational_tour",
+        "sports_event",
+        "cultural_event",
+        "charity_auction",
       ],
     },
   },

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, PackageOpen, DollarSign } from "lucide-react";
+import { Users, Calendar, PackageOpen, DollarSign, Clock, MapPin, Target, FileText, Shield } from "lucide-react";
+import { formatDuration } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface OverviewTabProps {
   event: any;
@@ -100,32 +103,67 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
           <CardTitle>Event Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">Description</h3>
-            <p className="text-muted-foreground">{event.description || "No description provided"}</p>
-          </div>
+          {event.description && (
+            <div>
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Description
+              </h3>
+              <p className="text-muted-foreground">{event.description}</p>
+            </div>
+          )}
+          
+          {event.purpose && (
+            <div>
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Purpose
+              </h3>
+              <p className="text-muted-foreground">{event.purpose}</p>
+            </div>
+          )}
+          
+          {event.goal && (
+            <div>
+              <h3 className="font-semibold mb-2">Goal</h3>
+              <p className="text-muted-foreground">{event.goal}</p>
+            </div>
+          )}
           
           <div>
-            <h3 className="font-semibold mb-2">Purpose</h3>
-            <p className="text-muted-foreground">{event.purpose || "No purpose specified"}</p>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">Goal</h3>
-            <p className="text-muted-foreground">{event.goal || "No goal specified"}</p>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">Location</h3>
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Location
+            </h3>
             <p className="text-muted-foreground">{event.location}</p>
           </div>
-          
-          {event.duration_minutes && (
-            <div>
-              <h3 className="font-semibold mb-2">Duration</h3>
+
+          <div>
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Event Duration
+            </h3>
+            {event.is_multi_day ? (
               <p className="text-muted-foreground">
-                {Math.floor(event.duration_minutes / 60)}h {event.duration_minutes % 60}m
+                {format(new Date(event.event_date), "MMM d, yyyy")} - {format(new Date(event.event_end_date), "MMM d, yyyy")}
+                <br />
+                {event.event_time} - {event.event_end_time}
               </p>
+            ) : (
+              <p className="text-muted-foreground">
+                {event.duration_minutes ? formatDuration(event.duration_minutes) : "Not specified"}
+                {event.event_end_time && ` (ends at ${event.event_end_time})`}
+              </p>
+            )}
+          </div>
+
+          {event.age_restriction && (
+            <div>
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Age Restrictions
+              </h3>
+              <Badge variant="secondary">{event.age_restriction.replace(/_/g, " ").toUpperCase()}</Badge>
             </div>
           )}
           
@@ -133,9 +171,9 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
             <h3 className="font-semibold mb-2">Event Types</h3>
             <div className="flex flex-wrap gap-2">
               {event.event_types?.map((type: string) => (
-                <span key={type} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                  {type}
-                </span>
+                <Badge key={type} variant="outline">
+                  {type.replace(/_/g, " ")}
+                </Badge>
               ))}
             </div>
           </div>
