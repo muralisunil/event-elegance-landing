@@ -42,6 +42,7 @@ const outreachEventTypes = [
   { value: "sports_event", label: "Sports Event" },
   { value: "cultural_event", label: "Cultural Event" },
   { value: "charity_auction", label: "Charity Auction" },
+  { value: "other", label: "Other/Custom Event" },
 ];
 
 const ageRestrictions = [

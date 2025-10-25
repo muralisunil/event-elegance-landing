@@ -18,19 +18,25 @@ interface AddScheduleDialogProps {
   eventTypes: string[];
   schedule?: any;
   onSuccess: () => void;
+  preselectedSessionType?: string;
+  buildings?: any[];
+  rooms?: any[];
 }
 
-const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, onSuccess }: AddScheduleDialogProps) => {
+const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, onSuccess, preselectedSessionType, buildings = [], rooms = [] }: AddScheduleDialogProps) => {
   const [formData, setFormData] = useState({
     session_title: "",
     start_time: "",
     end_time: "",
     description: "",
     location: "",
-    session_type: eventTypes[0] || 'default',
+    session_type: preselectedSessionType || eventTypes[0] || 'default',
     metadata: {} as Record<string, any>,
+    building_id: "",
+    room_id: "",
   });
   const [loading, setLoading] = useState(false);
+  const [conflicts, setConflicts] = useState<string[]>([]);
 
   const currentTemplate = scheduleTemplates[formData.session_type] || scheduleTemplates.default;
 
@@ -44,6 +50,8 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
         location: schedule.location || "",
         session_type: schedule.session_type || eventTypes[0] || 'default',
         metadata: schedule.metadata || {},
+        building_id: schedule.building_id || "",
+        room_id: schedule.room_id || "",
       });
     } else {
       setFormData({
@@ -52,11 +60,13 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
         end_time: "",
         description: "",
         location: "",
-        session_type: eventTypes[0] || 'default',
+        session_type: preselectedSessionType || eventTypes[0] || 'default',
         metadata: {},
+        building_id: "",
+        room_id: "",
       });
     }
-  }, [schedule, open, eventTypes]);
+  }, [schedule, open, eventTypes, preselectedSessionType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +96,8 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       session_type: formData.session_type,
       metadata: formData.metadata,
       event_id: eventId,
+      building_id: formData.building_id || null,
+      room_id: formData.room_id || null,
     };
 
     const { error } = schedule
@@ -313,6 +325,72 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
               </div>
             )}
           </div>
+
+          {buildings.length > 0 && (
+            <div className="space-y-4 p-4 rounded-lg border bg-muted/50">
+              <h3 className="font-medium text-sm">Venue & Room</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="building_id">Building/Venue</Label>
+                  <Select
+                    value={formData.building_id}
+                    onValueChange={(value) => {
+                      setFormData({ 
+                        ...formData, 
+                        building_id: value,
+                        room_id: '' // Reset room when building changes
+                      });
+                    }}
+                  >
+                    <SelectTrigger id="building_id" className="bg-background">
+                      <SelectValue placeholder="Select building" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="">No building</SelectItem>
+                      {buildings.map(building => (
+                        <SelectItem key={building.id} value={building.id}>
+                          {building.building_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="room_id">Room</Label>
+                  <Select
+                    value={formData.room_id}
+                    onValueChange={(value) => setFormData({ ...formData, room_id: value })}
+                    disabled={!formData.building_id}
+                  >
+                    <SelectTrigger id="room_id" className="bg-background">
+                      <SelectValue placeholder="Select room" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="">No room</SelectItem>
+                      {rooms
+                        .filter(room => room.building_id === formData.building_id)
+                        .map(room => (
+                          <SelectItem key={room.id} value={room.id}>
+                            {room.room_name} {room.capacity && `(${room.capacity} pax)`}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {!formData.building_id && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    No building selected. Add buildings in the Venues tab to organize rooms.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
 
           {currentTemplate.specificFields.length > 0 && (
             <div className="space-y-4 p-4 rounded-lg border bg-muted/50">

@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      event_buildings: {
+        Row: {
+          address: string | null
+          building_name: string
+          created_at: string
+          event_id: string
+          id: string
+          notes: string | null
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          building_name: string
+          created_at?: string
+          event_id: string
+          id?: string
+          notes?: string | null
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          building_name?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          notes?: string | null
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_buildings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_guests: {
         Row: {
           created_at: string | null
@@ -120,8 +161,63 @@ export type Database = {
           },
         ]
       }
+      event_rooms: {
+        Row: {
+          building_id: string | null
+          capacity: number | null
+          created_at: string
+          event_id: string
+          facilities: string | null
+          id: string
+          notes: string | null
+          order_index: number
+          room_name: string
+          updated_at: string
+        }
+        Insert: {
+          building_id?: string | null
+          capacity?: number | null
+          created_at?: string
+          event_id: string
+          facilities?: string | null
+          id?: string
+          notes?: string | null
+          order_index?: number
+          room_name: string
+          updated_at?: string
+        }
+        Update: {
+          building_id?: string | null
+          capacity?: number | null
+          created_at?: string
+          event_id?: string
+          facilities?: string | null
+          id?: string
+          notes?: string | null
+          order_index?: number
+          room_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rooms_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "event_buildings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_rooms_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_schedules: {
         Row: {
+          building_id: string | null
           created_at: string | null
           description: string | null
           end_time: string
@@ -130,6 +226,7 @@ export type Database = {
           location: string | null
           metadata: Json | null
           order_index: number
+          room_id: string | null
           session_title: string
           session_type: string | null
           speaker: string | null
@@ -137,6 +234,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          building_id?: string | null
           created_at?: string | null
           description?: string | null
           end_time: string
@@ -145,6 +243,7 @@ export type Database = {
           location?: string | null
           metadata?: Json | null
           order_index?: number
+          room_id?: string | null
           session_title: string
           session_type?: string | null
           speaker?: string | null
@@ -152,6 +251,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          building_id?: string | null
           created_at?: string | null
           description?: string | null
           end_time?: string
@@ -160,6 +260,7 @@ export type Database = {
           location?: string | null
           metadata?: Json | null
           order_index?: number
+          room_id?: string | null
           session_title?: string
           session_type?: string | null
           speaker?: string | null
@@ -168,10 +269,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "event_schedules_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "event_buildings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_schedules_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_schedules_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "event_rooms"
             referencedColumns: ["id"]
           },
         ]

@@ -10,6 +10,7 @@ import ScheduleTab from "@/components/event/ScheduleTab";
 import GuestsTab from "@/components/event/GuestsTab";
 import LogisticsTab from "@/components/event/LogisticsTab";
 import SettingsTab from "@/components/event/SettingsTab";
+import BuildingRoomManager from "@/components/event/BuildingRoomManager";
 
 const ManageEvent = () => {
   const { eventId } = useParams();
@@ -80,8 +81,9 @@ const ManageEvent = () => {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="venues">Venues</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
             <TabsTrigger value="logistics">Logistics</TabsTrigger>
@@ -90,6 +92,10 @@ const ManageEvent = () => {
 
           <TabsContent value="overview">
             <OverviewTab event={event} />
+          </TabsContent>
+
+          <TabsContent value="venues">
+            <BuildingRoomManager eventId={eventId!} />
           </TabsContent>
 
           <TabsContent value="schedule">

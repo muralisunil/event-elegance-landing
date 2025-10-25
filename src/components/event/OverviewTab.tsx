@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, PackageOpen, DollarSign, Clock, MapPin, Target, FileText, Shield } from "lucide-react";
+import { Users, Calendar, PackageOpen, DollarSign, Clock, MapPin, Target, FileText, Shield, Building2, DoorOpen } from "lucide-react";
 import { formatDuration, formatTimeTo12Hour, calculateEndTime } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -18,9 +18,12 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
     logisticsItems: 0,
     totalBudget: 0,
   });
+  const [buildings, setBuildings] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
 
   useEffect(() => {
     fetchStats();
+    fetchBuildingsAndRooms();
   }, [event.id]);
 
   const fetchStats = async () => {
@@ -40,6 +43,16 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
       logisticsItems: logisticsRes.count || 0,
       totalBudget,
     });
+  };
+
+  const fetchBuildingsAndRooms = async () => {
+    const [buildingsRes, roomsRes] = await Promise.all([
+      supabase.from('event_buildings').select('*').eq('event_id', event.id).order('order_index'),
+      supabase.from('event_rooms').select('*').eq('event_id', event.id).order('order_index'),
+    ]);
+
+    if (buildingsRes.data) setBuildings(buildingsRes.data);
+    if (roomsRes.data) setRooms(roomsRes.data);
   };
 
   return (
@@ -201,6 +214,34 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
               </p>
             )}
           </div>
+
+          {buildings.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Venues & Buildings
+              </h3>
+              <div className="space-y-3">
+                {buildings.map((building) => {
+                  const buildingRooms = rooms.filter(r => r.building_id === building.id);
+                  return (
+                    <div key={building.id} className="border-l-4 border-primary pl-3">
+                      <p className="font-medium">{building.building_name}</p>
+                      {building.address && (
+                        <p className="text-sm text-muted-foreground">{building.address}</p>
+                      )}
+                      {buildingRooms.length > 0 && (
+                        <div className="mt-1 text-sm flex items-center gap-1 text-muted-foreground">
+                          <DoorOpen className="h-3 w-3" />
+                          Rooms: {buildingRooms.map(r => r.room_name).join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

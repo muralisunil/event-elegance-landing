@@ -146,7 +146,31 @@ export const scheduleTemplates: Record<string, ScheduleTemplate> = {
       { name: 'speaker', label: 'Speaker/Lead', type: 'text' },
       { name: 'notes', label: 'Additional Notes', type: 'textarea' },
     ]
-  }
+  },
+  other: {
+    commonFields: ['session_title', 'start_time', 'end_time', 'location', 'description'],
+    specificFields: [
+      { 
+        name: 'custom_type', 
+        label: 'Session Type/Category', 
+        type: 'text',
+        placeholder: 'e.g., Break, Lunch, Registration, Setup, etc.',
+        helpText: 'Specify what kind of session this is',
+        required: true
+      },
+      { 
+        name: 'organizer', 
+        label: 'Organizer/Lead', 
+        type: 'text' 
+      },
+      { 
+        name: 'notes', 
+        label: 'Additional Notes', 
+        type: 'textarea',
+        placeholder: 'Any relevant information about this session'
+      },
+    ],
+  },
 };
 
 export const formatFieldName = (fieldName: string): string => {
@@ -172,6 +196,21 @@ export const getEventTypeLabel = (type: string): string => {
     sports_event: 'Sports Event',
     health_screening: 'Health Screening',
     cultural_event: 'Cultural Event',
+    other: 'Other',
   };
   return labels[type] || formatFieldName(type);
+};
+
+// Get session type label with context awareness to avoid redundancy
+export const getSessionTypeLabel = (
+  sessionType: string,
+  eventTypes: string[]
+): string => {
+  // If single-type event AND session type matches event type, just say "Session"
+  if (eventTypes.length === 1 && eventTypes.includes(sessionType)) {
+    return 'Session';
+  }
+  
+  // Otherwise show the full label
+  return getEventTypeLabel(sessionType);
 };
