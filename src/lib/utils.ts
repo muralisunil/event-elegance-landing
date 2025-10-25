@@ -73,16 +73,41 @@ export function calculateEndTime(
   startTime: string,
   hours: number,
   minutes: number
-): string {
-  if (!startTime) return "";
+): { 
+  timeString: string; 
+  isNextDay: boolean; 
+  formattedDisplay: string;
+  rawTime: string;
+} {
+  if (!startTime) return { timeString: "", isNextDay: false, formattedDisplay: "", rawTime: "" };
 
   const [startHour, startMinute] = startTime.split(':').map(Number);
   const totalMinutes = startHour * 60 + startMinute + hours * 60 + minutes;
   
+  const isNextDay = totalMinutes >= 1440; // 24 hours = 1440 minutes
   const endHour = Math.floor(totalMinutes / 60) % 24;
   const endMinute = totalMinutes % 60;
 
-  return `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+  // Format to 12-hour with AM/PM
+  const period = endHour >= 12 ? 'PM' : 'AM';
+  const displayHour = endHour === 0 ? 12 : endHour > 12 ? endHour - 12 : endHour;
+  const timeString = `${displayHour}:${String(endMinute).padStart(2, '0')} ${period}`;
+  
+  const formattedDisplay = isNextDay 
+    ? `${timeString} (Next Day)` 
+    : timeString;
+
+  const rawTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+
+  return { timeString, isNextDay, formattedDisplay, rawTime };
+}
+
+export function formatTimeTo12Hour(time: string): string {
+  if (!time) return "";
+  const [hour, minute] = time.split(':').map(Number);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
 }
 
 export function formatDuration(minutes: number | null | undefined): string {

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Calendar, PackageOpen, DollarSign, Clock, MapPin, Target, FileText, Shield } from "lucide-react";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, formatTimeTo12Hour, calculateEndTime } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface OverviewTabProps {
@@ -145,15 +145,25 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
             </h3>
             {event.is_multi_day ? (
               <p className="text-muted-foreground">
-                {format(new Date(event.event_date), "MMM d, yyyy")} - {format(new Date(event.event_end_date), "MMM d, yyyy")}
-                <br />
-                {event.event_time} - {event.event_end_time}
+                {format(new Date(event.event_date), "MMM d, yyyy")} at {formatTimeTo12Hour(event.event_time)} 
+                {" - "}
+                {format(new Date(event.event_end_date), "MMM d, yyyy")} at {formatTimeTo12Hour(event.event_end_time)}
               </p>
             ) : (
-              <p className="text-muted-foreground">
-                {event.duration_minutes ? formatDuration(event.duration_minutes) : "Not specified"}
-                {event.event_end_time && ` (ends at ${event.event_end_time})`}
-              </p>
+              <div className="text-muted-foreground space-y-1">
+                <p>
+                  {formatTimeTo12Hour(event.event_time)} - {formatTimeTo12Hour(event.event_end_time)}
+                  {event.event_time && event.event_end_time && 
+                   event.event_end_time < event.event_time && (
+                    <Badge variant="secondary" className="ml-2 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200">
+                      Next Day
+                    </Badge>
+                  )}
+                </p>
+                {event.duration_minutes && (
+                  <p className="text-sm">Duration: {formatDuration(event.duration_minutes)}</p>
+                )}
+              </div>
             )}
           </div>
 

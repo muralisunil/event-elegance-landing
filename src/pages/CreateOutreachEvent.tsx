@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Check, Users, Ticket } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Users, Ticket, Clock } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -66,6 +66,7 @@ const CreateOutreachEvent = () => {
     endTime: "",
     isMultiDay: false,
     endDate: "",
+    useCustomEndTime: false,
     location: "",
     description: "",
     purpose: "",
@@ -112,8 +113,9 @@ const CreateOutreachEvent = () => {
       return;
     }
 
-    // Validate multi-day event requirements
+    // Validate based on event type
     if (formData.isMultiDay) {
+      // Multi-day: require end date and end time
       if (!formData.endDate) {
         toast({
           title: "Missing End Date",
@@ -127,6 +129,38 @@ const CreateOutreachEvent = () => {
         toast({
           title: "Missing End Time",
           description: "Multi-day events must have an end time",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+    } else if (formData.useCustomEndTime) {
+      // Single-day with custom end time: validate end time > start time
+      if (!formData.endTime) {
+        toast({
+          title: "Missing End Time",
+          description: "Please specify an end time",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      if (formData.endTime <= formData.eventTime) {
+        toast({
+          title: "Invalid End Time",
+          description: "End time must be after start time",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Single-day with duration: validate duration is set
+      const totalMinutes = parseInt(formData.durationHours) * 60 + parseInt(formData.durationMinutes);
+      if (totalMinutes === 0) {
+        toast({
+          title: "Missing Duration",
+          description: "Please specify event duration",
           variant: "destructive",
         });
         setLoading(false);
@@ -159,19 +193,28 @@ const CreateOutreachEvent = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Calculate duration for single-day events
-      const durationMinutes = formData.isMultiDay 
-        ? null 
-        : parseInt(formData.durationHours) * 60 + parseInt(formData.durationMinutes);
+      // Calculate duration and end time based on mode
+      let durationMinutes: number | null = null;
+      let endTime: string | null = null;
 
-      // Calculate end time for single-day events if not manually set
-      const endTime = formData.isMultiDay
-        ? formData.endTime
-        : formData.endTime || calculateEndTime(
-            formData.eventTime,
-            parseInt(formData.durationHours),
-            parseInt(formData.durationMinutes)
-          );
+      if (formData.isMultiDay) {
+        // Multi-day: no duration, use manual end time
+        durationMinutes = null;
+        endTime = formData.endTime;
+      } else if (formData.useCustomEndTime) {
+        // Single-day with custom end time: no duration, use manual end time
+        durationMinutes = null;
+        endTime = formData.endTime;
+      } else {
+        // Single-day with duration: calculate end time from duration
+        durationMinutes = parseInt(formData.durationHours) * 60 + parseInt(formData.durationMinutes);
+        const calculatedEndTime = calculateEndTime(
+          formData.eventTime,
+          parseInt(formData.durationHours),
+          parseInt(formData.durationMinutes)
+        );
+        endTime = calculatedEndTime.rawTime;
+      }
 
       const { data, error } = await supabase.from("outreach_events").insert([{
         user_id: user.id,
@@ -319,6 +362,7 @@ const CreateOutreachEvent = () => {
                           isMultiDay: checked as boolean,
                           endDate: "",
                           endTime: "",
+                          useCustomEndTime: false,
                         })
                       }
                     />
@@ -358,37 +402,76 @@ const CreateOutreachEvent = () => {
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Multi-day events require an end date and time. Duration is not applicable.
+                        Multi-day events require an end date and time.
                       </p>
                     </>
                   ) : (
                     <>
-                      <DurationSelector
-                        startTime={formData.eventTime}
-                        durationHours={formData.durationHours}
-                        durationMinutes={formData.durationMinutes}
-                        onHoursChange={(value) =>
-                          setFormData({ ...formData, durationHours: value })
-                        }
-                        onMinutesChange={(value) =>
-                          setFormData({ ...formData, durationMinutes: value })
-                        }
-                      />
-                      <div className="space-y-2">
-                        <Label htmlFor="endTime">End Time (optional - auto-calculated)</Label>
-                        <Input
-                          id="endTime"
-                          type="time"
-                          value={formData.endTime}
-                          onChange={(e) =>
-                            setFormData({ ...formData, endTime: e.target.value })
+                      {!formData.useCustomEndTime && (
+                        <DurationSelector
+                          startTime={formData.eventTime}
+                          durationHours={formData.durationHours}
+                          durationMinutes={formData.durationMinutes}
+                          onHoursChange={(value) =>
+                            setFormData({ ...formData, durationHours: value })
                           }
-                          placeholder="Leave empty for auto-calculation"
+                          onMinutesChange={(value) =>
+                            setFormData({ ...formData, durationMinutes: value })
+                          }
                         />
-                        <p className="text-sm text-muted-foreground">
-                          Leave empty to auto-calculate from duration, or manually set a custom end time
-                        </p>
+                      )}
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="useCustomEndTime"
+                          checked={formData.useCustomEndTime}
+                          onCheckedChange={(checked) => {
+                            const newUseCustom = checked as boolean;
+                            setFormData({ 
+                              ...formData, 
+                              useCustomEndTime: newUseCustom,
+                              endTime: newUseCustom ? "" : "",
+                              durationHours: newUseCustom ? "0" : "2",
+                              durationMinutes: newUseCustom ? "0" : "0",
+                            });
+                          }}
+                        />
+                        <Label htmlFor="useCustomEndTime" className="text-sm cursor-pointer">
+                          Set custom end time instead of using duration
+                        </Label>
                       </div>
+
+                      {formData.useCustomEndTime ? (
+                        <div className="space-y-2">
+                          <Label htmlFor="endTime">End Time *</Label>
+                          <Input
+                            id="endTime"
+                            type="time"
+                            value={formData.endTime}
+                            onChange={(e) =>
+                              setFormData({ ...formData, endTime: e.target.value })
+                            }
+                            required
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Manually specify when the event ends
+                          </p>
+                        </div>
+                      ) : formData.eventTime && (
+                        <div className="space-y-2">
+                          <Label>Calculated End Time</Label>
+                          <div className={`flex items-center gap-2 p-3 rounded-md border ${
+                            calculateEndTime(formData.eventTime, parseInt(formData.durationHours), parseInt(formData.durationMinutes)).isNextDay
+                              ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800"
+                              : "bg-muted"
+                          }`}>
+                            <Clock className="h-4 w-4" />
+                            <span className="font-medium">
+                              {calculateEndTime(formData.eventTime, parseInt(formData.durationHours), parseInt(formData.durationMinutes)).formattedDisplay || "Select start time and duration"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
 

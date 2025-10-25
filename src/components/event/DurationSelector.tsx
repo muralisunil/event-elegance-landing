@@ -20,9 +20,9 @@ export function DurationSelector({
   onMinutesChange,
   disabled = false,
 }: DurationSelectorProps) {
-  const endTime = startTime
+  const endTimeData = startTime
     ? calculateEndTime(startTime, parseInt(durationHours), parseInt(durationMinutes))
-    : "";
+    : null;
 
   return (
     <div className="space-y-2">
@@ -57,10 +57,10 @@ export function DurationSelector({
           </Select>
         </div>
       </div>
-      {endTime && !disabled && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      {endTimeData && endTimeData.formattedDisplay && !disabled && (
+        <div className={`flex items-center gap-2 text-sm ${endTimeData.isNextDay ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground"}`}>
           <Clock className="h-4 w-4" />
-          <span>Event ends at: {endTime}</span>
+          <span>Event ends at: {endTimeData.formattedDisplay}</span>
         </div>
       )}
     </div>

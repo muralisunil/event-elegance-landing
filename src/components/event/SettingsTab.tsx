@@ -10,7 +10,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DurationSelector } from "@/components/event/DurationSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { validateEventDates, calculateEndTime, formatDateForInput, getMinEventDate, getMaxEventDate } from "@/lib/utils";
+import { validateEventDates, calculateEndTime, formatDateForInput, getMinEventDate, getMaxEventDate, formatTimeTo12Hour } from "@/lib/utils";
+import { Clock } from "lucide-react";
 
 const outreachEventTypes = [
   { value: "workshop", label: "Workshop" },
@@ -70,6 +71,7 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
     event_end_time: event.event_end_time || "",
     is_multi_day: event.is_multi_day || false,
     event_end_date: event.event_end_date || "",
+    useCustomEndTime: event.duration_minutes === null && !event.is_multi_day,
     age_restriction: event.age_restriction || "all_ages",
     max_guests: event.max_guests || "",
     is_unlimited_guests: event.is_unlimited_guests || false,
@@ -98,19 +100,67 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
       return;
     }
 
-    // Calculate duration for single-day events
-    const durationMinutes = formData.is_multi_day 
-      ? null 
-      : parseInt(formData.durationHours) * 60 + parseInt(formData.durationMinutes);
+    // Calculate duration and end time based on mode
+    let durationMinutes: number | null = null;
+    let endTime: string | null = null;
 
-    // Calculate end time for single-day events if not manually set
-    const endTime = formData.is_multi_day
-      ? formData.event_end_time
-      : formData.event_end_time || calculateEndTime(
-          formData.event_time,
-          parseInt(formData.durationHours),
-          parseInt(formData.durationMinutes)
-        );
+    if (formData.is_multi_day) {
+      // Multi-day: no duration, use manual end time
+      durationMinutes = null;
+      endTime = formData.event_end_time;
+      
+      if (!formData.event_end_date || !formData.event_end_time) {
+        toast({
+          title: "Missing Information",
+          description: "Multi-day events must have both end date and end time",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+    } else if (formData.useCustomEndTime) {
+      // Single-day with custom end time: validate and use manual end time
+      durationMinutes = null;
+      endTime = formData.event_end_time;
+      
+      if (!formData.event_end_time) {
+        toast({
+          title: "Missing End Time",
+          description: "Please specify an end time",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      if (formData.event_end_time <= formData.event_time) {
+        toast({
+          title: "Invalid End Time",
+          description: "End time must be after start time",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Single-day with duration: calculate end time from duration
+      const totalMinutes = parseInt(formData.durationHours) * 60 + parseInt(formData.durationMinutes);
+      if (totalMinutes === 0) {
+        toast({
+          title: "Missing Duration",
+          description: "Please specify event duration",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      durationMinutes = totalMinutes;
+      const calculatedEndTime = calculateEndTime(
+        formData.event_time,
+        parseInt(formData.durationHours),
+        parseInt(formData.durationMinutes)
+      );
+      endTime = calculatedEndTime.rawTime;
+    }
 
     const payload = {
       name: formData.name,
@@ -270,6 +320,7 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
                   is_multi_day: checked as boolean,
                   event_end_date: "",
                   event_end_time: "",
+                  useCustomEndTime: false,
                 })
               }
             />
@@ -305,31 +356,70 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                Multi-day events require an end date and time. Duration is not applicable.
+                Multi-day events require an end date and time.
               </p>
             </>
           ) : (
             <>
-              <DurationSelector
-                startTime={formData.event_time}
-                durationHours={formData.durationHours}
-                durationMinutes={formData.durationMinutes}
-                onHoursChange={(value) => setFormData({ ...formData, durationHours: value })}
-                onMinutesChange={(value) => setFormData({ ...formData, durationMinutes: value })}
-              />
-              <div>
-                <Label htmlFor="event_end_time">End Time (optional - auto-calculated)</Label>
-                <Input
-                  id="event_end_time"
-                  type="time"
-                  value={formData.event_end_time}
-                  onChange={(e) => setFormData({ ...formData, event_end_time: e.target.value })}
-                  placeholder="Leave empty for auto-calculation"
+              {!formData.useCustomEndTime && (
+                <DurationSelector
+                  startTime={formData.event_time}
+                  durationHours={formData.durationHours}
+                  durationMinutes={formData.durationMinutes}
+                  onHoursChange={(value) => setFormData({ ...formData, durationHours: value })}
+                  onMinutesChange={(value) => setFormData({ ...formData, durationMinutes: value })}
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Leave empty to auto-calculate from duration
-                </p>
+              )}
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="useCustomEndTime"
+                  checked={formData.useCustomEndTime}
+                  onCheckedChange={(checked) => {
+                    const newUseCustom = checked as boolean;
+                    setFormData({ 
+                      ...formData, 
+                      useCustomEndTime: newUseCustom,
+                      event_end_time: newUseCustom ? "" : "",
+                      durationHours: newUseCustom ? "0" : "2",
+                      durationMinutes: newUseCustom ? "0" : "0",
+                    });
+                  }}
+                />
+                <Label htmlFor="useCustomEndTime" className="text-sm cursor-pointer">
+                  Set custom end time instead of using duration
+                </Label>
               </div>
+
+              {formData.useCustomEndTime ? (
+                <div>
+                  <Label htmlFor="event_end_time">End Time *</Label>
+                  <Input
+                    id="event_end_time"
+                    type="time"
+                    required
+                    value={formData.event_end_time}
+                    onChange={(e) => setFormData({ ...formData, event_end_time: e.target.value })}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Manually specify when the event ends
+                  </p>
+                </div>
+              ) : formData.event_time && (
+                <div>
+                  <Label>Calculated End Time</Label>
+                  <div className={`flex items-center gap-2 p-3 rounded-md border ${
+                    calculateEndTime(formData.event_time, parseInt(formData.durationHours), parseInt(formData.durationMinutes)).isNextDay
+                      ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800"
+                      : "bg-muted"
+                  }`}>
+                    <Clock className="h-4 w-4" />
+                    <span className="font-medium">
+                      {calculateEndTime(formData.event_time, parseInt(formData.durationHours), parseInt(formData.durationMinutes)).formattedDisplay || "Select start time and duration"}
+                    </span>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
