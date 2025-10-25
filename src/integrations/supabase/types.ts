@@ -55,6 +55,41 @@ export type Database = {
           },
         ]
       }
+      event_business_categories: {
+        Row: {
+          category_name: string
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          category_name: string
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          category_name?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_business_categories_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_guests: {
         Row: {
           created_at: string | null
@@ -287,6 +322,283 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "event_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_sponsor_tiers: {
+        Row: {
+          benefits: string | null
+          contribution_amount: number | null
+          created_at: string
+          display_color: string | null
+          event_id: string
+          id: string
+          tier_level: number
+          tier_name: string
+          updated_at: string
+        }
+        Insert: {
+          benefits?: string | null
+          contribution_amount?: number | null
+          created_at?: string
+          display_color?: string | null
+          event_id: string
+          id?: string
+          tier_level?: number
+          tier_name: string
+          updated_at?: string
+        }
+        Update: {
+          benefits?: string | null
+          contribution_amount?: number | null
+          created_at?: string
+          display_color?: string | null
+          event_id?: string
+          id?: string
+          tier_level?: number
+          tier_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_sponsor_tiers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_sponsors: {
+        Row: {
+          business_category_id: string | null
+          contact_email: string
+          contact_person: string
+          contact_phone: string | null
+          contribution_amount: number | null
+          contribution_type: string | null
+          created_at: string
+          event_id: string
+          id: string
+          in_kind_description: string | null
+          is_also_vendor: boolean | null
+          logo_url: string | null
+          notes: string | null
+          organization_name: string
+          sponsor_tier_id: string | null
+          status: string | null
+          updated_at: string
+          vendor_id: string | null
+          website: string | null
+        }
+        Insert: {
+          business_category_id?: string | null
+          contact_email: string
+          contact_person: string
+          contact_phone?: string | null
+          contribution_amount?: number | null
+          contribution_type?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          in_kind_description?: string | null
+          is_also_vendor?: boolean | null
+          logo_url?: string | null
+          notes?: string | null
+          organization_name: string
+          sponsor_tier_id?: string | null
+          status?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_category_id?: string | null
+          contact_email?: string
+          contact_person?: string
+          contact_phone?: string | null
+          contribution_amount?: number | null
+          contribution_type?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          in_kind_description?: string | null
+          is_also_vendor?: boolean | null
+          logo_url?: string | null
+          notes?: string | null
+          organization_name?: string
+          sponsor_tier_id?: string | null
+          status?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_sponsors_business_category_id_fkey"
+            columns: ["business_category_id"]
+            isOneToOne: false
+            referencedRelation: "event_business_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_sponsors_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_sponsors_sponsor_tier_id_fkey"
+            columns: ["sponsor_tier_id"]
+            isOneToOne: false
+            referencedRelation: "event_sponsor_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_sponsor_vendor"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "event_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_vendors: {
+        Row: {
+          booth_number: string | null
+          business_category_id: string | null
+          contact_email: string
+          contact_person: string
+          contact_phone: string | null
+          contract_amount: number | null
+          created_at: string
+          event_id: string
+          id: string
+          linked_sponsor_id: string | null
+          notes: string | null
+          organization_name: string
+          payment_status: string | null
+          services_provided: string
+          setup_requirements: string | null
+          status: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          booth_number?: string | null
+          business_category_id?: string | null
+          contact_email: string
+          contact_person: string
+          contact_phone?: string | null
+          contract_amount?: number | null
+          created_at?: string
+          event_id: string
+          id?: string
+          linked_sponsor_id?: string | null
+          notes?: string | null
+          organization_name: string
+          payment_status?: string | null
+          services_provided: string
+          setup_requirements?: string | null
+          status?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          booth_number?: string | null
+          business_category_id?: string | null
+          contact_email?: string
+          contact_person?: string
+          contact_phone?: string | null
+          contract_amount?: number | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          linked_sponsor_id?: string | null
+          notes?: string | null
+          organization_name?: string
+          payment_status?: string | null
+          services_provided?: string
+          setup_requirements?: string | null
+          status?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_vendors_business_category_id_fkey"
+            columns: ["business_category_id"]
+            isOneToOne: false
+            referencedRelation: "event_business_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_vendors_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_vendors_linked_sponsor_id_fkey"
+            columns: ["linked_sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "event_sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_volunteers: {
+        Row: {
+          created_at: string
+          email: string
+          event_id: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          role: string | null
+          shift_time: string | null
+          skills: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          shift_time?: string | null
+          skills?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          shift_time?: string | null
+          skills?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_volunteers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
             referencedColumns: ["id"]
           },
         ]

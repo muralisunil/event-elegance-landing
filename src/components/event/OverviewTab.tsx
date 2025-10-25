@@ -11,6 +11,38 @@ interface OverviewTabProps {
 }
 
 const OverviewTab = ({ event }: OverviewTabProps) => {
+  const [counts, setCounts] = useState({
+    volunteers: 0,
+    sponsors: 0,
+    vendors: 0,
+    guests: 0,
+    totalSponsorship: 0,
+  });
+
+  useEffect(() => {
+    fetchCounts();
+  }, [event.id]);
+
+  const fetchCounts = async () => {
+    const [volunteersRes, sponsorsRes, vendorsRes, guestsRes] = await Promise.all([
+      supabase.from("event_volunteers").select("*", { count: "exact", head: true }).eq("event_id", event.id),
+      supabase.from("event_sponsors").select("contribution_amount, status").eq("event_id", event.id),
+      supabase.from("event_vendors").select("*", { count: "exact", head: true }).eq("event_id", event.id),
+      supabase.from("event_guests").select("*", { count: "exact", head: true }).eq("event_id", event.id),
+    ]);
+
+    const totalSponsorship = (sponsorsRes.data || [])
+      .filter((s: any) => s.status === "confirmed" && s.contribution_amount)
+      .reduce((sum: number, s: any) => sum + parseFloat(s.contribution_amount), 0);
+
+    setCounts({
+      volunteers: volunteersRes.count || 0,
+      sponsors: sponsorsRes.data?.length || 0,
+      vendors: vendorsRes.count || 0,
+      guests: guestsRes.count || 0,
+      totalSponsorship,
+    });
+  };
   const [stats, setStats] = useState({
     totalGuests: 0,
     acceptedGuests: 0,
@@ -60,14 +92,46 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Guests</CardTitle>
+            <CardTitle className="text-sm font-medium">Volunteers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalGuests}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.acceptedGuests} accepted
-            </p>
+            <div className="text-2xl font-bold">{counts.volunteers}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sponsors</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{counts.sponsors}</div>
+            {counts.totalSponsorship > 0 && (
+              <p className="text-xs text-muted-foreground">
+                ${counts.totalSponsorship.toLocaleString()}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Vendors</CardTitle>
+            <PackageOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{counts.vendors}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Guests</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{counts.guests}</div>
           </CardContent>
         </Card>
 
