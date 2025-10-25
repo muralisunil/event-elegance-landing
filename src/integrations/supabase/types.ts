@@ -128,8 +128,10 @@ export type Database = {
           event_id: string
           id: string
           location: string | null
+          metadata: Json | null
           order_index: number
           session_title: string
+          session_type: string | null
           speaker: string | null
           start_time: string
           updated_at: string | null
@@ -141,8 +143,10 @@ export type Database = {
           event_id: string
           id?: string
           location?: string | null
+          metadata?: Json | null
           order_index?: number
           session_title: string
+          session_type?: string | null
           speaker?: string | null
           start_time: string
           updated_at?: string | null
@@ -154,8 +158,10 @@ export type Database = {
           event_id?: string
           id?: string
           location?: string | null
+          metadata?: Json | null
           order_index?: number
           session_title?: string
+          session_type?: string | null
           speaker?: string | null
           start_time?: string
           updated_at?: string | null

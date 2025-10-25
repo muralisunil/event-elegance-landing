@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Clock, MapPin, User, Trash2, Pencil, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Clock, MapPin, Trash2, Pencil, Calendar } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AddScheduleDialog from "./AddScheduleDialog";
+import { formatFieldName, getEventTypeLabel } from "@/lib/scheduleTemplates";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,9 +20,10 @@ import {
 
 interface ScheduleTabProps {
   eventId: string;
+  eventTypes: string[];
 }
 
-const ScheduleTab = ({ eventId }: ScheduleTabProps) => {
+const ScheduleTab = ({ eventId, eventTypes }: ScheduleTabProps) => {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,7 +108,14 @@ const ScheduleTab = ({ eventId }: ScheduleTabProps) => {
             <Card key={schedule.id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <CardTitle>{schedule.session_title}</CardTitle>
+                  <div className="space-y-2">
+                    <CardTitle>{schedule.session_title}</CardTitle>
+                    {schedule.session_type && (
+                      <Badge variant="secondary">
+                        {getEventTypeLabel(schedule.session_type)}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
@@ -124,7 +134,7 @@ const ScheduleTab = ({ eventId }: ScheduleTabProps) => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Clock className="mr-2 h-4 w-4" />
                   {schedule.start_time} - {schedule.end_time}
@@ -135,14 +145,22 @@ const ScheduleTab = ({ eventId }: ScheduleTabProps) => {
                     {schedule.location}
                   </div>
                 )}
-                {schedule.speaker && (
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <User className="mr-2 h-4 w-4" />
-                    {schedule.speaker}
-                  </div>
-                )}
                 {schedule.description && (
-                  <p className="text-sm mt-2">{schedule.description}</p>
+                  <p className="text-sm">{schedule.description}</p>
+                )}
+                {schedule.metadata && Object.keys(schedule.metadata).length > 0 && (
+                  <div className="pt-2 border-t space-y-1">
+                    {Object.entries(schedule.metadata).map(([key, value]) => (
+                      value && (
+                        <div key={key} className="text-sm">
+                          <span className="font-medium text-muted-foreground">
+                            {formatFieldName(key)}:
+                          </span>{' '}
+                          <span>{String(value)}</span>
+                        </div>
+                      )
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -154,6 +172,7 @@ const ScheduleTab = ({ eventId }: ScheduleTabProps) => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         eventId={eventId}
+        eventTypes={eventTypes}
         schedule={editingSchedule}
         onSuccess={fetchSchedules}
       />

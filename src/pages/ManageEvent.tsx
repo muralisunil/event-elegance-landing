@@ -93,7 +93,7 @@ const ManageEvent = () => {
           </TabsContent>
 
           <TabsContent value="schedule">
-            <ScheduleTab eventId={eventId!} />
+            <ScheduleTab eventId={eventId!} eventTypes={event.event_types || []} />
           </TabsContent>
 
           <TabsContent value="guests">
