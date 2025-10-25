@@ -52,7 +52,7 @@ const VendorsTab = ({ eventId }: VendorsTabProps) => {
   const fetchVendors = async () => {
     const { data, error } = await supabase
       .from("event_vendors")
-      .select("*, business_category:event_business_categories(*), linked_sponsor:event_sponsors(*, sponsor_tier:event_sponsor_tiers(*))")
+      .select("*, business_category:event_business_categories(*), linked_sponsor:event_sponsors!event_vendors_linked_sponsor_id_fkey(*, sponsor_tier:event_sponsor_tiers(*))")
       .eq("event_id", eventId)
       .order("created_at", { ascending: false });
 
