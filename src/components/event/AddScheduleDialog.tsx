@@ -332,21 +332,28 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="building_id">Building/Venue (Optional)</Label>
+                  <Label htmlFor="building_id">Building/Venue</Label>
                   <Select
-                    value={formData.building_id || undefined}
+                    value={formData.building_id || "none"}
                     onValueChange={(value) => {
-                      setFormData({ 
-                        ...formData, 
-                        building_id: value,
-                        room_id: '' // Reset room when building changes
-                      });
+                      if (value === "none") {
+                        setFormData({ ...formData, building_id: '', room_id: '' });
+                      } else {
+                        setFormData({ 
+                          ...formData, 
+                          building_id: value,
+                          room_id: '' // Reset room when building changes
+                        });
+                      }
                     }}
                   >
                     <SelectTrigger id="building_id" className="bg-background">
                       <SelectValue placeholder="Select building" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
+                      <SelectItem value="none">
+                        <span className="text-muted-foreground">No building</span>
+                      </SelectItem>
                       {buildings.map(building => (
                         <SelectItem key={building.id} value={building.id}>
                           {building.building_name}
@@ -354,30 +361,28 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                       ))}
                     </SelectContent>
                   </Select>
-                  {formData.building_id && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="mt-1"
-                      onClick={() => setFormData({ ...formData, building_id: '', room_id: '' })}
-                    >
-                      Clear building
-                    </Button>
-                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="room_id">Room (Optional)</Label>
+                  <Label htmlFor="room_id">Room</Label>
                   <Select
-                    value={formData.room_id || undefined}
-                    onValueChange={(value) => setFormData({ ...formData, room_id: value })}
+                    value={formData.room_id || "none"}
+                    onValueChange={(value) => {
+                      if (value === "none") {
+                        setFormData({ ...formData, room_id: '' });
+                      } else {
+                        setFormData({ ...formData, room_id: value });
+                      }
+                    }}
                     disabled={!formData.building_id}
                   >
                     <SelectTrigger id="room_id" className="bg-background">
-                      <SelectValue placeholder="Select room" />
+                      <SelectValue placeholder={formData.building_id ? "Select room" : "Select building first"} />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
+                      <SelectItem value="none">
+                        <span className="text-muted-foreground">No room</span>
+                      </SelectItem>
                       {rooms
                         .filter(room => room.building_id === formData.building_id)
                         .map(room => (
@@ -387,17 +392,6 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                         ))}
                     </SelectContent>
                   </Select>
-                  {formData.room_id && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="mt-1"
-                      onClick={() => setFormData({ ...formData, room_id: '' })}
-                    >
-                      Clear room
-                    </Button>
-                  )}
                 </div>
               </div>
               
