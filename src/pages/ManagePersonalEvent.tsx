@@ -82,6 +82,19 @@ const ManagePersonalEvent = () => {
 
   if (!event || !config) return null;
 
+  // Calculate number of tabs for grid layout
+  const tabCount = [
+    true, // overview
+    config.feature_venues_enabled,
+    config.feature_schedule_enabled,
+    true, // guests
+    config.feature_food_planning_enabled,
+    config.feature_logistics_enabled,
+    config.feature_tasks_enabled,
+    true, // organizers
+    true, // settings
+  ].filter(Boolean).length;
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-6">
@@ -97,7 +110,7 @@ const ManagePersonalEvent = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-full flex-wrap">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           {config.feature_venues_enabled && <TabsTrigger value="venues">Venues</TabsTrigger>}
           {config.feature_schedule_enabled && <TabsTrigger value="schedule">Schedule</TabsTrigger>}
