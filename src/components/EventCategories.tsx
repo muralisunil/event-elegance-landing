@@ -9,7 +9,7 @@ const categories = [
     title: "Personal Events",
     description: "From intimate gatherings to milestone celebrations, create unforgettable memories with your loved ones.",
     features: ["Weddings & Anniversaries", "Birthday Parties", "Family Reunions", "Private Celebrations"],
-    link: "/browse-events",
+    link: "/create-personal-event",
   },
   {
     icon: Briefcase,
