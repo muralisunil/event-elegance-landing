@@ -44,7 +44,7 @@ const GuestsTab = ({ eventId, event }: GuestsTabProps) => {
     setLoading(true);
     const { data, error } = await supabase
       .from('event_guests')
-      .select('*')
+      .select('*, guest_category:event_guest_categories(*)')
       .eq('event_id', eventId)
       .order('created_at', { ascending: false });
 
@@ -128,6 +128,7 @@ const GuestsTab = ({ eventId, event }: GuestsTabProps) => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Accompanies</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -139,6 +140,15 @@ const GuestsTab = ({ eventId, event }: GuestsTabProps) => {
                   <TableCell className="font-medium">{guest.name}</TableCell>
                   <TableCell>{guest.email}</TableCell>
                   <TableCell>{guest.phone || "-"}</TableCell>
+                  <TableCell>
+                    {guest.guest_category ? (
+                      <Badge style={{ backgroundColor: guest.guest_category.display_color }}>
+                        {guest.guest_category.category_name}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>{getStatusBadge(guest.invitation_status)}</TableCell>
                   <TableCell>{guest.num_accompanies || 0}</TableCell>
                   <TableCell className="text-right">

@@ -26,32 +26,48 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
     dietary_preferences: "",
     special_requirements: "",
     num_accompanies: 0,
+    guest_category_id: "",
   });
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (guest) {
-      setFormData({
-        name: guest.name || "",
-        email: guest.email || "",
-        phone: guest.phone || "",
-        invitation_status: guest.invitation_status || "pending",
-        dietary_preferences: guest.dietary_preferences || "",
-        special_requirements: guest.special_requirements || "",
-        num_accompanies: guest.num_accompanies || 0,
-      });
-    } else {
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        invitation_status: "pending",
-        dietary_preferences: "",
-        special_requirements: "",
-        num_accompanies: 0,
-      });
+    if (open) {
+      fetchCategories();
+      if (guest) {
+        setFormData({
+          name: guest.name || "",
+          email: guest.email || "",
+          phone: guest.phone || "",
+          invitation_status: guest.invitation_status || "pending",
+          dietary_preferences: guest.dietary_preferences || "",
+          special_requirements: guest.special_requirements || "",
+          num_accompanies: guest.num_accompanies || 0,
+          guest_category_id: guest.guest_category_id || "",
+        });
+      } else {
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          invitation_status: "pending",
+          dietary_preferences: "",
+          special_requirements: "",
+          num_accompanies: 0,
+          guest_category_id: "",
+        });
+      }
     }
   }, [guest, open]);
+
+  const fetchCategories = async () => {
+    const { data } = await supabase
+      .from("event_guest_categories")
+      .select("*")
+      .eq("event_id", eventId)
+      .order("category_level", { ascending: false });
+    setCategories(data || []);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +76,7 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
     const payload = {
       ...formData,
       event_id: eventId,
+      guest_category_id: formData.guest_category_id || null,
     };
 
     const { error } = guest
@@ -140,6 +157,28 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
               </SelectContent>
             </Select>
           </div>
+
+          {categories.length > 0 && (
+            <div>
+              <Label htmlFor="category">Guest Category</Label>
+              <Select
+                value={formData.guest_category_id}
+                onValueChange={(value) => setFormData({ ...formData, guest_category_id: value })}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select category (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.category_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {event.allow_accompanies && (
             <div>

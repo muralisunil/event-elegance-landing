@@ -16,8 +16,9 @@ export function getMaxEventDate(): Date {
   return today;
 }
 
-export function formatDateForInput(date: Date): string {
-  return date.toISOString().split('T')[0];
+export function formatDateForInput(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toISOString().split('T')[0];
 }
 
 export function validateEventDates(
