@@ -297,30 +297,37 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
                       <Label className="text-xs text-muted-foreground mb-2">Pricing</Label>
                       {session.allow_all_guest_categories ? (
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">All Guests</Badge>
+                          <Badge variant="outline">All Guests Allowed</Badge>
                           {session.default_charge_amount && session.default_charge_amount > 0 ? (
-                            <span className="text-sm font-medium">${session.default_charge_amount.toFixed(2)} per person</span>
+                            <Badge variant="destructive">${session.default_charge_amount.toFixed(2)} per person</Badge>
                           ) : (
-                            <Badge variant="secondary">Free</Badge>
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Free for All</Badge>
                           )}
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <Label className="text-xs">Allowed Categories:</Label>
-                          <div className="flex flex-wrap gap-2">
-                            {sessionPricing[session.id]?.map(sp => {
-                              const cat = guestCategories.find(c => c.id === sp.guest_category_id);
-                              return (
-                                <Badge key={sp.guest_category_id} variant="outline">
-                                  {cat?.category_name}
-                                  {sp.is_chargeable && session.default_charge_amount && session.default_charge_amount > 0
-                                    ? ` - $${session.default_charge_amount.toFixed(2)}`
-                                    : ' - Free'
-                                  }
-                                </Badge>
-                              );
-                            })}
-                          </div>
+                          {sessionPricing[session.id]?.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {sessionPricing[session.id].map(sp => {
+                                const cat = guestCategories.find(c => c.id === sp.guest_category_id);
+                                return (
+                                  <Badge 
+                                    key={sp.guest_category_id} 
+                                    variant={sp.is_chargeable ? "destructive" : "secondary"}
+                                    className={!sp.is_chargeable ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : ""}
+                                  >
+                                    {cat?.category_name}
+                                    {sp.is_chargeable && session.default_charge_amount && session.default_charge_amount > 0
+                                      ? ` - $${session.default_charge_amount.toFixed(2)}`
+                                      : ' - Free'
+                                    }
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <Badge variant="outline">Category restrictions configured</Badge>
+                          )}
                         </div>
                       )}
                     </div>

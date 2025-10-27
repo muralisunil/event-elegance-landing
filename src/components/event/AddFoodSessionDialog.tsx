@@ -339,14 +339,99 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
             />
           </div>
 
-          <div>
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            />
-          </div>
+          {/* Venue & Room Selection */}
+          {buildings.length > 0 && (
+            <div className="space-y-4 p-4 rounded-lg border bg-muted/50">
+              <h3 className="font-medium text-sm">Venue & Room</h3>
+              
+              <div>
+                <Label htmlFor="building_id">Building/Venue</Label>
+                <Select
+                  value={formData.building_id}
+                  onValueChange={(value) => setFormData({ ...formData, building_id: value, room_id: "" })}
+                >
+                  <SelectTrigger id="building_id">
+                    <SelectValue placeholder="Select building..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {buildings.map((building) => (
+                      <SelectItem key={building.id} value={building.id}>
+                        {building.building_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.building_id && (
+                <div>
+                  <Label htmlFor="room_id">Room (Optional)</Label>
+                  <Select
+                    value={formData.room_id}
+                    onValueChange={(value) => setFormData({ ...formData, room_id: value })}
+                  >
+                    <SelectTrigger id="room_id">
+                      <SelectValue placeholder="Select room..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No specific room</SelectItem>
+                      {rooms
+                        .filter((r) => r.building_id === formData.building_id)
+                        .map((room) => (
+                          <SelectItem key={room.id} value={room.id}>
+                            {room.room_name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Quick Add Building */}
+              <div className="pt-2 border-t">
+                <Label className="text-xs text-muted-foreground">Quick Add New Building</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Building name..."
+                    value={newBuildingName}
+                    onChange={(e) => setNewBuildingName(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleQuickAddBuilding}
+                    disabled={addingBuilding || !newBuildingName.trim()}
+                  >
+                    {addingBuilding ? "Adding..." : <Plus className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Quick Add Room */}
+              {formData.building_id && (
+                <div className="pt-2 border-t">
+                  <Label className="text-xs text-muted-foreground">Quick Add New Room</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Room name..."
+                      value={newRoomName}
+                      onChange={(e) => setNewRoomName(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleQuickAddRoom}
+                      disabled={addingRoom || !newRoomName.trim()}
+                    >
+                      {addingRoom ? "Adding..." : <Plus className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <Label htmlFor="estimated_attendees">Estimated Attendees</Label>
@@ -413,24 +498,41 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
 
               {(allowAllGuestCategories || selectedCategories.length > 0) && (
                 <div className="pl-6 space-y-3 border-t pt-3">
-                  <Label htmlFor="charge-amount">Charge Amount</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">$</span>
-                    <Input
-                      id="charge-amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00 (free for all)"
-                      value={chargeAmount}
-                      onChange={(e) => setChargeAmount(e.target.value)}
-                      className="w-32"
-                    />
+                  <Label className="text-sm font-semibold">Pricing Configuration</Label>
+                  
+                  {/* Charge Amount Input */}
+                  <div className="space-y-2">
+                    <Label htmlFor="charge-amount">Charge Amount (for paying attendees)</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">$</span>
+                      <Input
+                        id="charge-amount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={chargeAmount}
+                        onChange={(e) => setChargeAmount(e.target.value)}
+                        className="w-32"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {parseFloat(chargeAmount) > 0 
+                        ? "Specify below which categories must pay this amount"
+                        : "Leave as 0 if food is free for everyone"
+                      }
+                    </p>
                   </div>
 
+                  {/* Category-specific charge/free designation */}
                   {!allowAllGuestCategories && parseFloat(chargeAmount) > 0 && selectedCategories.length > 0 && (
-                    <div className="space-y-2 mt-3">
-                      <Label className="text-sm">Which categories should be charged ${chargeAmount}?</Label>
+                    <div className="space-y-3 p-3 bg-muted rounded-md">
+                      <Label className="text-sm">
+                        Which of the allowed categories must <strong>PAY ${chargeAmount}</strong>?
+                      </Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Check the categories below that should be charged. Unchecked categories will attend <strong>FREE</strong>.
+                      </p>
                       {selectedCategories.map(categoryId => {
                         const category = guestCategories.find(c => c.id === categoryId);
                         return (
@@ -452,18 +554,29 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
                           </div>
                         );
                       })}
-                      <p className="text-xs text-muted-foreground">
-                        Categories not checked above will attend free
-                      </p>
                     </div>
                   )}
 
-                  <p className="text-xs text-muted-foreground">
-                    Leave empty or 0 for free attendance
-                  </p>
+                  {/* Summary of pricing logic */}
+                  {!allowAllGuestCategories && selectedCategories.length > 0 && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md text-xs">
+                      <strong>Summary:</strong>
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        {parseFloat(chargeAmount) > 0 ? (
+                          <>
+                            <li>Categories marked above: Pay ${chargeAmount}</li>
+                            <li>Other allowed categories: Attend FREE</li>
+                          </>
+                        ) : (
+                          <li>All allowed categories: Attend FREE</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
 
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                    <p className="text-xs text-blue-800 dark:text-blue-200">
+                  {/* Coming Soon Note */}
+                  <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-md">
+                    <p className="text-xs text-purple-800 dark:text-purple-200">
                       💡 <strong>Coming Soon:</strong> Multiple charge tiers (different prices for veg/non-veg/vegan, etc.) are in development!
                     </p>
                   </div>
