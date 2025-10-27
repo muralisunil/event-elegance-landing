@@ -332,9 +332,9 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="building_id">Building/Venue</Label>
+                  <Label htmlFor="building_id">Building/Venue (Optional)</Label>
                   <Select
-                    value={formData.building_id}
+                    value={formData.building_id || undefined}
                     onValueChange={(value) => {
                       setFormData({ 
                         ...formData, 
@@ -347,7 +347,6 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                       <SelectValue placeholder="Select building" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
-                      <SelectItem value="">No building</SelectItem>
                       {buildings.map(building => (
                         <SelectItem key={building.id} value={building.id}>
                           {building.building_name}
@@ -355,12 +354,23 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                       ))}
                     </SelectContent>
                   </Select>
+                  {formData.building_id && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1"
+                      onClick={() => setFormData({ ...formData, building_id: '', room_id: '' })}
+                    >
+                      Clear building
+                    </Button>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="room_id">Room</Label>
+                  <Label htmlFor="room_id">Room (Optional)</Label>
                   <Select
-                    value={formData.room_id}
+                    value={formData.room_id || undefined}
                     onValueChange={(value) => setFormData({ ...formData, room_id: value })}
                     disabled={!formData.building_id}
                   >
@@ -368,7 +378,6 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                       <SelectValue placeholder="Select room" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
-                      <SelectItem value="">No room</SelectItem>
                       {rooms
                         .filter(room => room.building_id === formData.building_id)
                         .map(room => (
@@ -378,6 +387,17 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                         ))}
                     </SelectContent>
                   </Select>
+                  {formData.room_id && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1"
+                      onClick={() => setFormData({ ...formData, room_id: '' })}
+                    >
+                      Clear room
+                    </Button>
+                  )}
                 </div>
               </div>
               

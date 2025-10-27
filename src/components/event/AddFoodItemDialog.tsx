@@ -213,16 +213,15 @@ export const AddFoodItemDialog = ({ open, onOpenChange, sessionId, eventId, item
           </div>
 
           <div>
-            <Label htmlFor="assigned_volunteer_id">Assigned Volunteer</Label>
+            <Label htmlFor="assigned_volunteer_id">Assigned Volunteer (Optional)</Label>
             <Select
-              value={formData.assigned_volunteer_id}
+              value={formData.assigned_volunteer_id || undefined}
               onValueChange={(value) => setFormData({ ...formData, assigned_volunteer_id: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select volunteer" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
                 {volunteers.map((volunteer) => (
                   <SelectItem key={volunteer.id} value={volunteer.id}>
                     {volunteer.name}
@@ -230,6 +229,17 @@ export const AddFoodItemDialog = ({ open, onOpenChange, sessionId, eventId, item
                 ))}
               </SelectContent>
             </Select>
+            {formData.assigned_volunteer_id && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mt-1"
+                onClick={() => setFormData({ ...formData, assigned_volunteer_id: "" })}
+              >
+                Clear volunteer
+              </Button>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
