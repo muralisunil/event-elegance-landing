@@ -1376,6 +1376,7 @@ export type Database = {
       }
       personal_event_configurations: {
         Row: {
+          allow_guest_view: boolean | null
           created_at: string | null
           event_id: string
           feature_food_planning_enabled: boolean | null
@@ -1384,6 +1385,7 @@ export type Database = {
           feature_schedule_enabled: boolean | null
           feature_tasks_enabled: boolean | null
           feature_venues_enabled: boolean | null
+          guest_viewable_sections: Json | null
           id: string
           invitation_image_url: string | null
           is_published: boolean | null
@@ -1391,6 +1393,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          allow_guest_view?: boolean | null
           created_at?: string | null
           event_id: string
           feature_food_planning_enabled?: boolean | null
@@ -1399,6 +1402,7 @@ export type Database = {
           feature_schedule_enabled?: boolean | null
           feature_tasks_enabled?: boolean | null
           feature_venues_enabled?: boolean | null
+          guest_viewable_sections?: Json | null
           id?: string
           invitation_image_url?: string | null
           is_published?: boolean | null
@@ -1406,6 +1410,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          allow_guest_view?: boolean | null
           created_at?: string | null
           event_id?: string
           feature_food_planning_enabled?: boolean | null
@@ -1414,6 +1419,7 @@ export type Database = {
           feature_schedule_enabled?: boolean | null
           feature_tasks_enabled?: boolean | null
           feature_venues_enabled?: boolean | null
+          guest_viewable_sections?: Json | null
           id?: string
           invitation_image_url?: string | null
           is_published?: boolean | null
@@ -1585,6 +1591,54 @@ export type Database = {
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "personal_event_venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_guest_access: {
+        Row: {
+          access_count: number | null
+          created_at: string | null
+          event_id: string
+          guest_id: string
+          id: string
+          invitation_code: string
+          last_accessed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_count?: number | null
+          created_at?: string | null
+          event_id: string
+          guest_id: string
+          id?: string
+          invitation_code: string
+          last_accessed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_count?: number | null
+          created_at?: string | null
+          event_id?: string
+          guest_id?: string
+          id?: string
+          invitation_code?: string
+          last_accessed_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_guest_access_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_guest_access_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_guests"
             referencedColumns: ["id"]
           },
         ]
@@ -2304,6 +2358,10 @@ export type Database = {
       }
       can_view_personal_event_tasks: {
         Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_guest_view_access: {
+        Args: { p_event_id: string; p_section: string; p_user_id: string }
         Returns: boolean
       }
     }
