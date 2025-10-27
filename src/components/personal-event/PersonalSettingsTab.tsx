@@ -2,17 +2,21 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { canEnableGuestView, getRecommendedGuestAccess } from "@/lib/personalEventConfiguration";
+import { Info, Shield, Calendar, UtensilsCrossed, Users, MapPin, Package } from "lucide-react";
 
 interface PersonalSettingsTabProps {
   eventId: string;
   config: any;
+  event: any;
   onConfigUpdate: (newConfig: any) => void;
 }
 
-const PersonalSettingsTab = ({ eventId, config, onConfigUpdate }: PersonalSettingsTabProps) => {
+const PersonalSettingsTab = ({ eventId, config, event, onConfigUpdate }: PersonalSettingsTabProps) => {
   const [features, setFeatures] = useState({
     feature_venues_enabled: true,
     feature_schedule_enabled: true,
@@ -113,6 +117,88 @@ const PersonalSettingsTab = ({ eventId, config, onConfigUpdate }: PersonalSettin
               onCheckedChange={(checked) => handleFeatureToggle('feature_tasks_enabled', checked)}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Guest View Permissions</CardTitle>
+          <CardDescription>
+            {canEnableGuestView(event?.event_types || [])
+              ? "Control what invited guests can view (requires guest to have an account)"
+              : "Guest view is not available for this event type"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {canEnableGuestView(event?.event_types || []) ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label>Allow guests to view event details</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Invited guests with accounts can view selected sections (read-only)
+                  </p>
+                </div>
+                <Switch 
+                  checked={config?.allow_guest_view || false}
+                  onCheckedChange={(checked) => handleFeatureToggle('allow_guest_view', checked)}
+                />
+              </div>
+              
+              {config?.allow_guest_view && (
+                <>
+                  <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                    <Label className="text-sm font-semibold">Sections guests can view:</Label>
+                    {[
+                      { id: 'schedule', label: 'Schedule', icon: Calendar },
+                      { id: 'food', label: 'Food Planning', icon: UtensilsCrossed },
+                      { id: 'guests', label: 'Guest List', icon: Users },
+                      { id: 'venues', label: 'Venues', icon: MapPin },
+                      { id: 'logistics', label: 'Logistics', icon: Package },
+                    ].map(section => (
+                      <div key={section.id} className="flex items-center space-x-3">
+                        <Checkbox 
+                          id={section.id}
+                          checked={(config?.guest_viewable_sections as string[] || []).includes(section.id)}
+                        />
+                        <Label htmlFor={section.id} className="flex items-center gap-2 cursor-pointer">
+                          <section.icon className="h-4 w-4" />
+                          {section.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Recommended Settings</AlertTitle>
+                    <AlertDescription>
+                      {getRecommendedGuestAccess(event?.event_types || []).reason}
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <Alert className="bg-primary/5 border-primary/20">
+                    <Shield className="h-4 w-4 text-primary" />
+                    <AlertTitle>Privacy & Security</AlertTitle>
+                    <AlertDescription className="text-sm space-y-1">
+                      <div>• Guests must have an account to view details</div>
+                      <div>• All access is read-only (guests cannot edit)</div>
+                      <div>• To give edit permissions, add guest as co-organizer</div>
+                    </AlertDescription>
+                  </Alert>
+                </>
+              )}
+            </div>
+          ) : (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Guest view is only available for collaborative event types:
+                Pot Luck, Family Reunion, School Reunion, Friends Reunion
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     </div>

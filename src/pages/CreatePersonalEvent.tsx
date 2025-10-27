@@ -71,7 +71,7 @@ const CreatePersonalEvent = () => {
 
       if (error) throw error;
 
-      await initializeDefaultPersonalConfiguration(event.id);
+      await initializeDefaultPersonalConfiguration(event.id, selectedTypes);
 
       toast.success("Personal event created successfully!");
       navigate(`/manage-personal-event/${event.id}`);

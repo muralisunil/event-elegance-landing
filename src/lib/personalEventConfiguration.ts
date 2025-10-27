@@ -1,5 +1,98 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Event types that support guest view
+export const COLLABORATIVE_EVENT_TYPES = [
+  'pot_luck',
+  'family_reunion',
+  'school_reunion',
+  'friends_reunion',
+];
+
+// Default guest access per event type
+export const eventTypeGuestAccess: Record<string, {
+  allowGuestView: boolean;
+  viewableSections: string[];
+  description: string;
+}> = {
+  pot_luck: {
+    allowGuestView: true,
+    viewableSections: ['food', 'schedule', 'guests', 'venues'],
+    description: 'Guests can coordinate what to bring and see who else is attending',
+  },
+  family_reunion: {
+    allowGuestView: true,
+    viewableSections: ['schedule', 'guests', 'venues', 'logistics'],
+    description: 'Family members can view event details and plan accordingly',
+  },
+  school_reunion: {
+    allowGuestView: true,
+    viewableSections: ['schedule', 'guests', 'venues'],
+    description: 'Alumni can see who is attending and the event schedule',
+  },
+  friends_reunion: {
+    allowGuestView: true,
+    viewableSections: ['schedule', 'guests', 'venues'],
+    description: 'Friends can view event details and coordinate attendance',
+  },
+};
+
+export const canEnableGuestView = (eventTypes: string[]): boolean => {
+  return eventTypes.some(type => COLLABORATIVE_EVENT_TYPES.includes(type));
+};
+
+export const getRecommendedGuestAccess = (eventTypes: string[]) => {
+  const hasCollaborative = eventTypes.some(type => COLLABORATIVE_EVENT_TYPES.includes(type));
+  
+  if (!hasCollaborative) {
+    return {
+      allowGuestView: false,
+      viewableSections: [],
+      reason: 'This event type is typically organizer-managed',
+    };
+  }
+  
+  // Merge sections from all collaborative types
+  const sections = new Set<string>();
+  let descriptions: string[] = [];
+  
+  eventTypes.forEach(type => {
+    const config = eventTypeGuestAccess[type];
+    if (config?.allowGuestView) {
+      config.viewableSections.forEach(s => sections.add(s));
+      descriptions.push(config.description);
+    }
+  });
+  
+  return {
+    allowGuestView: true,
+    viewableSections: Array.from(sections),
+    reason: descriptions.join('. '),
+  };
+};
+
+// Function to link guest email to user account
+export const linkGuestToUser = async (
+  eventId: string,
+  guestId: string,
+  invitationCode: string,
+  userId: string
+) => {
+  const { error } = await supabase
+    .from('personal_event_guest_access')
+    .upsert({
+      event_id: eventId,
+      guest_id: guestId,
+      user_id: userId,
+      invitation_code: invitationCode,
+      last_accessed_at: new Date().toISOString(),
+      access_count: 1,
+    }, {
+      onConflict: 'event_id,guest_id',
+    });
+  
+  if (error) throw error;
+};
+
 export interface PersonalEventConfiguration {
   id: string;
   event_id: string;
@@ -44,12 +137,14 @@ export const updatePersonalEventConfiguration = async (
   return data;
 };
 
-export const initializeDefaultPersonalConfiguration = async (eventId: string) => {
+export const initializeDefaultPersonalConfiguration = async (eventId: string, eventTypes: string[] = []) => {
   const existingConfig = await getPersonalEventConfiguration(eventId);
   
   if (existingConfig) {
     return existingConfig;
   }
+
+  const guestAccess = getRecommendedGuestAccess(eventTypes);
 
   const { data, error } = await supabase
     .from('personal_event_configurations')
@@ -62,6 +157,8 @@ export const initializeDefaultPersonalConfiguration = async (eventId: string) =>
       feature_tasks_enabled: true,
       feature_marketplace_enabled: true,
       is_published: false,
+      allow_guest_view: guestAccess.allowGuestView,
+      guest_viewable_sections: guestAccess.viewableSections,
     })
     .select()
     .single();

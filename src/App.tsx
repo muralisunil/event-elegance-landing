@@ -14,6 +14,8 @@ import ManageEvent from "./pages/ManageEvent";
 import PersonalEvents from "./pages/PersonalEvents";
 import CreatePersonalEvent from "./pages/CreatePersonalEvent";
 import ManagePersonalEvent from "./pages/ManagePersonalEvent";
+import ViewPersonalEvent from "./pages/ViewPersonalEvent";
+import MyCalendar from "./pages/MyCalendar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
           <Route path="/personal-events" element={<PersonalEvents />} />
           <Route path="/create-personal-event" element={<CreatePersonalEvent />} />
           <Route path="/manage-personal-event/:eventId" element={<ManagePersonalEvent />} />
+          <Route path="/view-event/:invitationCode" element={<ViewPersonalEvent />} />
+          <Route path="/my-calendar" element={<MyCalendar />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
