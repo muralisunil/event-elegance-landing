@@ -30,7 +30,7 @@ export const AddPersonalFoodSessionDialog = ({
     session_date: "",
     meal_type: "lunch",
     session_time: "",
-    venue_name: "",
+    location: "",
     estimated_attendees: "",
     notes: "",
   });
@@ -42,7 +42,7 @@ export const AddPersonalFoodSessionDialog = ({
         session_date: session.session_date || "",
         meal_type: session.meal_type || "lunch",
         session_time: session.session_time || "",
-        venue_name: session.venue_name || "",
+        location: session.location || "",
         estimated_attendees: session.estimated_attendees?.toString() || "",
         notes: session.notes || "",
       });
@@ -51,7 +51,7 @@ export const AddPersonalFoodSessionDialog = ({
         session_date: "",
         meal_type: "lunch",
         session_time: "",
-        venue_name: "",
+        location: "",
         estimated_attendees: "",
         notes: "",
       });
@@ -67,7 +67,7 @@ export const AddPersonalFoodSessionDialog = ({
       session_date: formData.session_date,
       meal_type: formData.meal_type,
       session_time: formData.session_time || null,
-      venue_name: formData.venue_name || null,
+      location: formData.location || null,
       estimated_attendees: formData.estimated_attendees ? parseInt(formData.estimated_attendees) : null,
       notes: formData.notes || null,
     };
@@ -156,11 +156,11 @@ export const AddPersonalFoodSessionDialog = ({
           </div>
 
           <div>
-            <Label htmlFor="venue_name">Venue Name</Label>
+            <Label htmlFor="location">Location</Label>
             <Input
-              id="venue_name"
-              value={formData.venue_name}
-              onChange={(e) => setFormData({ ...formData, venue_name: e.target.value })}
+              id="location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder="e.g., Main Hall, Backyard, etc."
             />
           </div>
