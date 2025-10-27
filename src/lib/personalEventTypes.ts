@@ -1,0 +1,18 @@
+export const personalEventTypes = [
+  { value: 'wedding', label: 'Wedding' },
+  { value: 'birthday_party', label: 'Birthday Party' },
+  { value: 'anniversary', label: 'Anniversary' },
+  { value: 'baby_shower', label: 'Baby Shower' },
+  { value: 'bridal_shower', label: 'Bridal Shower' },
+  { value: 'engagement_party', label: 'Engagement Party' },
+  { value: 'graduation_party', label: 'Graduation Party' },
+  { value: 'family_reunion', label: 'Family Reunion' },
+  { value: 'school_reunion', label: 'School Reunion' },
+  { value: 'friends_reunion', label: 'Friends Reunion' },
+  { value: 'housewarming', label: 'Housewarming' },
+  { value: 'retirement_party', label: 'Retirement Party' },
+  { value: 'milestone_celebration', label: 'Milestone Celebration' },
+  { value: 'private_dinner', label: 'Private Dinner Party' },
+  { value: 'cocktail_party', label: 'Cocktail Party' },
+  { value: 'other', label: 'Other / Custom' },
+];
