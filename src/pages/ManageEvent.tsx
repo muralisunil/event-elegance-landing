@@ -115,7 +115,7 @@ const ManageEvent = () => {
           </TabsList>
 
           <TabsContent value="overview">
-            <OverviewTab event={event} />
+            <OverviewTab event={event} onUpdate={fetchEvent} />
           </TabsContent>
 
           <TabsContent value="venues">

@@ -19,9 +19,10 @@ import { GuestStatsDashboard } from "./GuestStatsDashboard";
 
 interface OverviewTabProps {
   event: any;
+  onUpdate?: () => void;
 }
 
-const OverviewTab = ({ event }: OverviewTabProps) => {
+const OverviewTab = ({ event, onUpdate }: OverviewTabProps) => {
   const [counts, setCounts] = useState({
     volunteers: 0,
     sponsors: 0,
@@ -465,7 +466,10 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
         open={manageTypesOpen}
         onOpenChange={setManageTypesOpen}
         event={event}
-        onSuccess={fetchAllData}
+        onSuccess={() => {
+          fetchAllData();
+          onUpdate?.();
+        }}
       />
 
       <GuestCategoryManager
