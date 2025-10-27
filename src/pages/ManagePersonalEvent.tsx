@@ -185,7 +185,7 @@ const ManagePersonalEvent = () => {
         </TabsContent>
 
             <TabsContent value="settings">
-              <PersonalSettingsTab eventId={eventId} config={config} onConfigUpdate={handleConfigUpdate} />
+              <PersonalSettingsTab eventId={eventId} config={config} event={event} onConfigUpdate={handleConfigUpdate} />
             </TabsContent>
       </Tabs>
     </div>
