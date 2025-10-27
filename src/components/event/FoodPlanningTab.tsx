@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -25,6 +26,8 @@ interface FoodSession {
   estimated_attendees: number | null;
   notes: string | null;
   item_count?: number;
+  allow_all_guest_categories?: boolean;
+  default_charge_amount?: number | null;
 }
 
 export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
@@ -37,6 +40,8 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [buildings, setBuildings] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [guestCategories, setGuestCategories] = useState<any[]>([]);
+  const [sessionPricing, setSessionPricing] = useState<Record<string, any[]>>({});
   const [stats, setStats] = useState({
     totalCost: 0,
     totalSessions: 0,
@@ -46,7 +51,17 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
     fetchSessions();
     fetchStats();
     fetchBuildingsAndRooms();
+    fetchGuestCategories();
   }, [eventId]);
+
+  const fetchGuestCategories = async () => {
+    const { data } = await supabase
+      .from('event_guest_categories')
+      .select('*')
+      .eq('event_id', eventId);
+    
+    if (data) setGuestCategories(data);
+  };
 
   const fetchBuildingsAndRooms = async () => {
     const { data: buildingsData } = await supabase
@@ -93,6 +108,24 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
         })
       );
       setSessions(sessionsWithCounts);
+      
+      // Fetch pricing for each session
+      if (data) {
+        const pricingMap: Record<string, any[]> = {};
+        await Promise.all(
+          data.map(async (session) => {
+            const { data: pricing } = await supabase
+              .from('event_food_session_guest_categories')
+              .select('guest_category_id, charge_amount')
+              .eq('food_session_id', session.id);
+            
+            if (pricing && pricing.length > 0) {
+              pricingMap[session.id] = pricing;
+            }
+          })
+        );
+        setSessionPricing(pricingMap);
+      }
     }
     setLoading(false);
   };
@@ -258,6 +291,50 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
                     {session.notes && (
                       <p className="text-sm text-muted-foreground">{session.notes}</p>
                     )}
+                    
+                    {/* Pricing Information */}
+                    <div className="mt-3 space-y-2">
+                      {session.allow_all_guest_categories ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Badge variant="secondary">All Guests</Badge>
+                          {session.default_charge_amount && session.default_charge_amount > 0 ? (
+                            <span className="font-semibold">
+                              ${Number(session.default_charge_amount).toFixed(2)}
+                            </span>
+                          ) : (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              Free
+                            </Badge>
+                          )}
+                        </div>
+                      ) : sessionPricing[session.id] ? (
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Category Pricing:</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {sessionPricing[session.id].map(item => {
+                              const cat = guestCategories.find(c => c.id === item.guest_category_id);
+                              return cat ? (
+                                <div 
+                                  key={item.guest_category_id}
+                                  className="flex items-center gap-1 text-xs border rounded px-2 py-1"
+                                >
+                                  <div 
+                                    className="w-2 h-2 rounded-full" 
+                                    style={{ backgroundColor: cat.display_color }}
+                                  />
+                                  <span>{cat.category_name}</span>
+                                  <span className="font-semibold">
+                                    {item.charge_amount > 0 
+                                      ? `$${Number(item.charge_amount).toFixed(2)}` 
+                                      : 'Free'}
+                                  </span>
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button

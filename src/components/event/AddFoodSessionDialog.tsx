@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { formatDateForInput } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDateForInput } from "@/lib/utils";
 
 interface AddFoodSessionDialogProps {
   open: boolean;
@@ -38,6 +39,63 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
   const [newRoomName, setNewRoomName] = useState("");
   const [addingBuilding, setAddingBuilding] = useState(false);
   const [addingRoom, setAddingRoom] = useState(false);
+  const [allowAllGuestCategories, setAllowAllGuestCategories] = useState(true);
+  const [defaultCharge, setDefaultCharge] = useState<string>("");
+  const [guestCategoryCharges, setGuestCategoryCharges] = useState<Record<string, string>>({});
+  const [guestCategories, setGuestCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchGuestCategories = async () => {
+      const { data, error } = await supabase
+        .from('event_guest_categories')
+        .select('*')
+        .eq('event_id', eventId)
+        .order('category_level');
+      
+      if (!error && data) {
+        setGuestCategories(data);
+        const initialCharges: Record<string, string> = {};
+        data.forEach(cat => {
+          initialCharges[cat.id] = "0.00";
+        });
+        setGuestCategoryCharges(initialCharges);
+      }
+    };
+    
+    if (open) {
+      fetchGuestCategories();
+    }
+  }, [open, eventId]);
+
+  useEffect(() => {
+    const fetchExistingCharges = async () => {
+      if (session?.id) {
+        const { data } = await supabase
+          .from('event_food_session_guest_categories')
+          .select('guest_category_id, charge_amount')
+          .eq('food_session_id', session.id);
+        
+        if (data && data.length > 0) {
+          setAllowAllGuestCategories(false);
+          const charges: Record<string, string> = {};
+          data.forEach(item => {
+            charges[item.guest_category_id] = item.charge_amount?.toString() || "0.00";
+          });
+          setGuestCategoryCharges(charges);
+        } else {
+          setAllowAllGuestCategories(session.allow_all_guest_categories ?? true);
+          setDefaultCharge(session.default_charge_amount?.toString() || "");
+        }
+      } else {
+        setAllowAllGuestCategories(true);
+        setDefaultCharge("");
+      }
+    };
+    
+    if (session) {
+      fetchExistingCharges();
+    }
+  }, [session]);
 
   useEffect(() => {
     if (session) {
@@ -106,7 +164,7 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
       toast({ title: "Success", description: "Building added successfully." });
       setFormData(prev => ({ ...prev, building_id: data.id }));
       setNewBuildingName("");
-      onSuccess(); // Refresh buildings list
+      onSuccess();
     }
     setAddingBuilding(false);
   };
@@ -135,13 +193,26 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
       toast({ title: "Success", description: "Room added successfully." });
       setFormData(prev => ({ ...prev, room_id: data.id }));
       setNewRoomName("");
-      onSuccess(); // Refresh rooms list
+      onSuccess();
     }
     setAddingRoom(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!allowAllGuestCategories) {
+      const hasAtLeastOneCategory = Object.keys(guestCategoryCharges).length > 0;
+      if (!hasAtLeastOneCategory) {
+        toast({
+          title: "Validation Error",
+          description: "Please add at least one guest category or enable 'No restrictions'.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     setLoading(true);
 
     const sessionData = {
@@ -154,48 +225,83 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
       location: formData.location || null,
       estimated_attendees: formData.estimated_attendees ? parseInt(formData.estimated_attendees) : null,
       notes: formData.notes || null,
+      allow_all_guest_categories: allowAllGuestCategories,
+      default_charge_amount: allowAllGuestCategories && defaultCharge 
+        ? parseFloat(defaultCharge) 
+        : null,
     };
 
-    let error;
-    
-    if (session) {
-      ({ error } = await supabase
-        .from("event_food_sessions")
-        .update(sessionData)
-        .eq("id", session.id));
-    } else {
-      ({ error } = await supabase
-        .from("event_food_sessions")
-        .insert(sessionData));
-    }
+    try {
+      let sessionId: string;
+      
+      if (session) {
+        const { error } = await supabase
+          .from("event_food_sessions")
+          .update(sessionData)
+          .eq("id", session.id);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: `Failed to ${session ? 'update' : 'create'} food session.`,
-        variant: "destructive",
-      });
-    } else {
+        if (error) throw error;
+        sessionId = session.id;
+      } else {
+        const { data, error } = await supabase
+          .from("event_food_sessions")
+          .insert(sessionData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        sessionId = data.id;
+      }
+
+      // Handle guest category charges
+      if (!allowAllGuestCategories) {
+        await supabase
+          .from('event_food_session_guest_categories')
+          .delete()
+          .eq('food_session_id', sessionId);
+        
+        const charges = Object.entries(guestCategoryCharges)
+          .map(([categoryId, amount]) => ({
+            food_session_id: sessionId,
+            guest_category_id: categoryId,
+            charge_amount: parseFloat(amount) || 0.00,
+          }));
+        
+        if (charges.length > 0) {
+          const { error: chargeError } = await supabase
+            .from('event_food_session_guest_categories')
+            .insert(charges);
+          
+          if (chargeError) {
+            toast({
+              title: "Warning",
+              description: "Food session created but failed to save pricing.",
+              variant: "destructive",
+            });
+          }
+        }
+      } else if (allowAllGuestCategories) {
+        await supabase
+          .from('event_food_session_guest_categories')
+          .delete()
+          .eq('food_session_id', sessionId);
+      }
+
       toast({
         title: "Success",
-        description: `Food session ${session ? 'updated' : 'created'} successfully.`,
+        description: `Food session ${session ? "updated" : "created"} successfully.`,
       });
       onSuccess();
       onOpenChange(false);
-      if (!session) {
-        setFormData({
-          session_date: "",
-          meal_type: "lunch",
-          session_time: "",
-          building_id: "",
-          room_id: "",
-          location: "",
-          estimated_attendees: "",
-          notes: "",
-        });
-      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -247,131 +353,12 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="building_id">Building/Venue</Label>
-              <Select
-                value={formData.building_id || "none"}
-                onValueChange={(value) => {
-                  if (value === "none") {
-                    setFormData({ ...formData, building_id: '', room_id: '' });
-                  } else {
-                    setFormData({ 
-                      ...formData, 
-                      building_id: value,
-                      room_id: '' 
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger id="building_id" className="bg-background">
-                  <SelectValue placeholder="Select building" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="none">
-                    <span className="text-muted-foreground">No building</span>
-                  </SelectItem>
-                  {buildings.map(building => (
-                    <SelectItem key={building.id} value={building.id}>
-                      {building.building_name}
-                    </SelectItem>
-                  ))}
-                  <Separator className="my-2" />
-                  <div className="p-2 space-y-2">
-                    <Label className="text-xs text-muted-foreground">Quick Add</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Building name"
-                        value={newBuildingName}
-                        onChange={(e) => setNewBuildingName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleQuickAddBuilding();
-                          }
-                        }}
-                        className="h-8"
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleQuickAddBuilding}
-                        disabled={!newBuildingName.trim() || addingBuilding}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="room_id">Room</Label>
-              <Select
-                value={formData.room_id || "none"}
-                onValueChange={(value) => {
-                  if (value === "none") {
-                    setFormData({ ...formData, room_id: '' });
-                  } else {
-                    setFormData({ ...formData, room_id: value });
-                  }
-                }}
-                disabled={!formData.building_id}
-              >
-                <SelectTrigger id="room_id" className="bg-background">
-                  <SelectValue placeholder={formData.building_id ? "Select room" : "Select building first"} />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="none">
-                    <span className="text-muted-foreground">No room</span>
-                  </SelectItem>
-                  {rooms
-                    .filter(room => room.building_id === formData.building_id)
-                    .map(room => (
-                      <SelectItem key={room.id} value={room.id}>
-                        {room.room_name}
-                      </SelectItem>
-                    ))}
-                  <Separator className="my-2" />
-                  <div className="p-2 space-y-2">
-                    <Label className="text-xs text-muted-foreground">Quick Add</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Room name"
-                        value={newRoomName}
-                        onChange={(e) => setNewRoomName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleQuickAddRoom();
-                          }
-                        }}
-                        className="h-8"
-                        disabled={!formData.building_id}
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleQuickAddRoom}
-                        disabled={!newRoomName.trim() || !formData.building_id || addingRoom}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <div>
-            <Label htmlFor="location">Location (Optional)</Label>
+            <Label htmlFor="location">Location</Label>
             <Input
               id="location"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Additional location details..."
             />
           </div>
 
@@ -393,18 +380,94 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={2}
-              placeholder="Any additional details..."
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          <Separator className="my-4" />
+
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Guest Category Pricing</Label>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="allow-all-food"
+                checked={allowAllGuestCategories}
+                onCheckedChange={(checked) => {
+                  setAllowAllGuestCategories(!!checked);
+                }}
+              />
+              <Label htmlFor="allow-all-food" className="cursor-pointer font-normal">
+                No restrictions - Allow all guest categories
+              </Label>
+            </div>
+
+            {allowAllGuestCategories ? (
+              <div className="space-y-2">
+                <Label htmlFor="default-charge">Charge Amount (for all guests)</Label>
+                <Input
+                  id="default-charge"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00 (free)"
+                  value={defaultCharge}
+                  onChange={(e) => setDefaultCharge(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Leave empty or set to 0.00 to make this session free for all guests
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 border rounded-lg p-4 max-h-64 overflow-y-auto">
+                <Label className="text-sm text-muted-foreground">
+                  Set charges per guest category (0.00 = free):
+                </Label>
+                
+                {guestCategories.map((category) => (
+                  <div key={category.id} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                        style={{ backgroundColor: category.display_color }}
+                      />
+                      <Label htmlFor={`charge-${category.id}`} className="flex-1">
+                        {category.category_name}
+                      </Label>
+                      <Input
+                        id={`charge-${category.id}`}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={guestCategoryCharges[category.id] || "0.00"}
+                        onChange={(e) => {
+                          setGuestCategoryCharges({
+                            ...guestCategoryCharges,
+                            [category.id]: e.target.value,
+                          });
+                        }}
+                        className="w-32"
+                      />
+                    </div>
+                  </div>
+                ))}
+                
+                <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
+                  <p>• Categories not listed will not be allowed to access this food session</p>
+                  <p>• Set to 0.00 to make it free for specific categories</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? (session ? "Updating..." : "Creating...") : (session ? "Update Session" : "Create Session")}
+              {loading ? "Saving..." : session ? "Update Session" : "Add Session"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

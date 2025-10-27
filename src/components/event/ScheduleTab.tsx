@@ -35,6 +35,8 @@ const ScheduleTab = ({ eventId, eventTypes }: ScheduleTabProps) => {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [buildings, setBuildings] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [scheduleCategories, setScheduleCategories] = useState<Record<string, any[]>>({});
+  const [guestCategories, setGuestCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
@@ -44,7 +46,17 @@ const ScheduleTab = ({ eventId, eventTypes }: ScheduleTabProps) => {
   useEffect(() => {
     fetchSchedules();
     fetchBuildingsAndRooms();
+    fetchGuestCategories();
   }, [eventId]);
+
+  const fetchGuestCategories = async () => {
+    const { data } = await supabase
+      .from('event_guest_categories')
+      .select('*')
+      .eq('event_id', eventId);
+    
+    if (data) setGuestCategories(data);
+  };
 
   const fetchSchedules = async () => {
     setLoading(true);
@@ -62,6 +74,24 @@ const ScheduleTab = ({ eventId, eventTypes }: ScheduleTabProps) => {
       });
     } else {
       setSchedules(data || []);
+      
+      // Fetch guest categories for each schedule
+      if (data) {
+        const categoriesMap: Record<string, any[]> = {};
+        await Promise.all(
+          data.map(async (schedule) => {
+            const { data: cats } = await supabase
+              .from('event_schedule_guest_categories')
+              .select('guest_category_id')
+              .eq('schedule_id', schedule.id);
+            
+            if (cats && cats.length > 0) {
+              categoriesMap[schedule.id] = cats.map(c => c.guest_category_id);
+            }
+          })
+        );
+        setScheduleCategories(categoriesMap);
+      }
     }
     setLoading(false);
   };
@@ -222,6 +252,24 @@ const ScheduleTab = ({ eventId, eventTypes }: ScheduleTabProps) => {
                         </div>
                       )
                     ))}
+                  </div>
+                )}
+                {schedule.allow_all_guest_categories === false && scheduleCategories[schedule.id] && (
+                  <div className="mt-2 pt-2 border-t flex flex-wrap gap-1">
+                    <span className="text-xs text-muted-foreground">Allowed:</span>
+                    {scheduleCategories[schedule.id].map(catId => {
+                      const cat = guestCategories.find(c => c.id === catId);
+                      return cat ? (
+                        <Badge 
+                          key={cat.id} 
+                          variant="outline" 
+                          className="text-xs"
+                          style={{ borderColor: cat.display_color }}
+                        >
+                          {cat.category_name}
+                        </Badge>
+                      ) : null;
+                    })}
                   </div>
                 )}
               </CardContent>

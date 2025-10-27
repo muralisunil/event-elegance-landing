@@ -215,10 +215,54 @@ export type Database = {
           },
         ]
       }
+      event_food_session_guest_categories: {
+        Row: {
+          charge_amount: number | null
+          created_at: string
+          food_session_id: string
+          guest_category_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          charge_amount?: number | null
+          created_at?: string
+          food_session_id: string
+          guest_category_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          charge_amount?: number | null
+          created_at?: string
+          food_session_id?: string
+          guest_category_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_food_session_guest_categories_food_session_id_fkey"
+            columns: ["food_session_id"]
+            isOneToOne: false
+            referencedRelation: "event_food_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_food_session_guest_categories_guest_category_id_fkey"
+            columns: ["guest_category_id"]
+            isOneToOne: false
+            referencedRelation: "event_guest_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_food_sessions: {
         Row: {
+          allow_all_guest_categories: boolean | null
           building_id: string | null
           created_at: string
+          default_charge_amount: number | null
           estimated_attendees: number | null
           event_id: string
           id: string
@@ -231,8 +275,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_all_guest_categories?: boolean | null
           building_id?: string | null
           created_at?: string
+          default_charge_amount?: number | null
           estimated_attendees?: number | null
           event_id: string
           id?: string
@@ -245,8 +291,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_all_guest_categories?: boolean | null
           building_id?: string | null
           created_at?: string
+          default_charge_amount?: number | null
           estimated_attendees?: number | null
           event_id?: string
           id?: string
@@ -556,8 +604,45 @@ export type Database = {
           },
         ]
       }
+      event_schedule_guest_categories: {
+        Row: {
+          created_at: string
+          guest_category_id: string
+          id: string
+          schedule_id: string
+        }
+        Insert: {
+          created_at?: string
+          guest_category_id: string
+          id?: string
+          schedule_id: string
+        }
+        Update: {
+          created_at?: string
+          guest_category_id?: string
+          id?: string
+          schedule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_schedule_guest_categories_guest_category_id_fkey"
+            columns: ["guest_category_id"]
+            isOneToOne: false
+            referencedRelation: "event_guest_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_schedule_guest_categories_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "event_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_schedules: {
         Row: {
+          allow_all_guest_categories: boolean | null
           building_id: string | null
           created_at: string | null
           description: string | null
@@ -575,6 +660,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          allow_all_guest_categories?: boolean | null
           building_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -592,6 +678,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          allow_all_guest_categories?: boolean | null
           building_id?: string | null
           created_at?: string | null
           description?: string | null

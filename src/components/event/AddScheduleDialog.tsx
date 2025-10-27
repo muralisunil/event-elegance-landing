@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { scheduleTemplates, getEventTypeLabel, type ScheduleField } from "@/lib/scheduleTemplates";
@@ -42,8 +43,54 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
   const [newRoomName, setNewRoomName] = useState("");
   const [addingBuilding, setAddingBuilding] = useState(false);
   const [addingRoom, setAddingRoom] = useState(false);
+  const [allowAllGuestCategories, setAllowAllGuestCategories] = useState(true);
+  const [selectedGuestCategories, setSelectedGuestCategories] = useState<string[]>([]);
+  const [guestCategories, setGuestCategories] = useState<any[]>([]);
 
   const currentTemplate = scheduleTemplates[formData.session_type] || scheduleTemplates.default;
+
+  useEffect(() => {
+    const fetchGuestCategories = async () => {
+      const { data, error } = await supabase
+        .from('event_guest_categories')
+        .select('*')
+        .eq('event_id', eventId)
+        .order('category_level');
+      
+      if (!error && data) {
+        setGuestCategories(data);
+      }
+    };
+    
+    if (open) {
+      fetchGuestCategories();
+    }
+  }, [open, eventId]);
+
+  useEffect(() => {
+    const fetchExistingRestrictions = async () => {
+      if (schedule?.id) {
+        const { data } = await supabase
+          .from('event_schedule_guest_categories')
+          .select('guest_category_id')
+          .eq('schedule_id', schedule.id);
+        
+        if (data && data.length > 0) {
+          setAllowAllGuestCategories(false);
+          setSelectedGuestCategories(data.map(r => r.guest_category_id));
+        } else {
+          setAllowAllGuestCategories(schedule.allow_all_guest_categories ?? true);
+        }
+      } else {
+        setAllowAllGuestCategories(true);
+        setSelectedGuestCategories([]);
+      }
+    };
+    
+    if (schedule) {
+      fetchExistingRestrictions();
+    }
+  }, [schedule]);
 
   useEffect(() => {
     if (schedule) {
@@ -96,7 +143,7 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       toast({ title: "Success", description: "Building added successfully." });
       setFormData(prev => ({ ...prev, building_id: data.id }));
       setNewBuildingName("");
-      onSuccess(); // Refresh buildings list
+      onSuccess();
     }
     setAddingBuilding(false);
   };
@@ -125,16 +172,25 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       toast({ title: "Success", description: "Room added successfully." });
       setFormData(prev => ({ ...prev, room_id: data.id }));
       setNewRoomName("");
-      onSuccess(); // Refresh rooms list
+      onSuccess();
     }
     setAddingRoom(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!allowAllGuestCategories && selectedGuestCategories.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one guest category or enable 'No restrictions'.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
-    // Validate required fields in metadata
     const missingFields = currentTemplate.specificFields
       .filter(field => field.required && !formData.metadata[field.name])
       .map(field => field.label);
@@ -160,27 +216,76 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       event_id: eventId,
       building_id: formData.building_id || null,
       room_id: formData.room_id || null,
+      allow_all_guest_categories: allowAllGuestCategories,
     };
 
-    const { error } = schedule
-      ? await supabase.from('event_schedules').update(payload).eq('id', schedule.id)
-      : await supabase.from('event_schedules').insert([payload]);
+    try {
+      let scheduleId: string;
+      
+      if (schedule) {
+        const { error } = await supabase
+          .from("event_schedules")
+          .update(payload)
+          .eq("id", schedule.id);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: `Failed to ${schedule ? 'update' : 'create'} session.`,
-        variant: "destructive",
-      });
-    } else {
+        if (error) throw error;
+        scheduleId = schedule.id;
+      } else {
+        const { data, error } = await supabase
+          .from("event_schedules")
+          .insert(payload)
+          .select()
+          .single();
+
+        if (error) throw error;
+        scheduleId = data.id;
+      }
+
+      // Handle guest category restrictions
+      if (!allowAllGuestCategories && selectedGuestCategories.length > 0) {
+        await supabase
+          .from('event_schedule_guest_categories')
+          .delete()
+          .eq('schedule_id', scheduleId);
+        
+        const restrictions = selectedGuestCategories.map(categoryId => ({
+          schedule_id: scheduleId,
+          guest_category_id: categoryId,
+        }));
+        
+        const { error: restrictionError } = await supabase
+          .from('event_schedule_guest_categories')
+          .insert(restrictions);
+        
+        if (restrictionError) {
+          toast({
+            title: "Warning",
+            description: "Schedule created but failed to save guest category restrictions.",
+            variant: "destructive",
+          });
+        }
+      } else if (allowAllGuestCategories) {
+        await supabase
+          .from('event_schedule_guest_categories')
+          .delete()
+          .eq('schedule_id', scheduleId);
+      }
+
       toast({
         title: "Success",
-        description: `Session ${schedule ? 'updated' : 'created'} successfully.`,
+        description: `Session ${schedule ? "updated" : "added"} successfully.`,
       });
       onSuccess();
       onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const renderDynamicField = (field: ScheduleField) => {
@@ -404,7 +509,7 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                         setFormData({ 
                           ...formData, 
                           building_id: value,
-                          room_id: '' // Reset room when building changes
+                          room_id: ''
                         });
                       }
                     }}
@@ -523,21 +628,76 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
 
           {currentTemplate.specificFields.length > 0 && (
             <div className="space-y-4 p-4 rounded-lg border bg-muted/50">
-              <h3 className="font-medium text-sm">
-                {getEventTypeLabel(formData.session_type)} Details
-              </h3>
-              {currentTemplate.specificFields.map(renderDynamicField)}
+              <h3 className="font-medium text-sm">Session Specific Fields</h3>
+              {currentTemplate.specificFields.map(field => renderDynamicField(field))}
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <Separator className="my-4" />
+
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Guest Category Access</Label>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="allow-all"
+                checked={allowAllGuestCategories}
+                onCheckedChange={(checked) => {
+                  setAllowAllGuestCategories(!!checked);
+                  if (checked) {
+                    setSelectedGuestCategories([]);
+                  }
+                }}
+              />
+              <Label htmlFor="allow-all" className="cursor-pointer font-normal">
+                No restrictions - Allow all guest categories
+              </Label>
+            </div>
+
+            {!allowAllGuestCategories && (
+              <div className="space-y-2 border rounded-lg p-4">
+                <Label className="text-sm text-muted-foreground">
+                  Select which guest categories can attend this session:
+                </Label>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {guestCategories.map((category) => (
+                    <div key={category.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`cat-${category.id}`}
+                        checked={selectedGuestCategories.includes(category.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedGuestCategories([...selectedGuestCategories, category.id]);
+                          } else {
+                            setSelectedGuestCategories(selectedGuestCategories.filter(id => id !== category.id));
+                          }
+                        }}
+                      />
+                      <Label 
+                        htmlFor={`cat-${category.id}`} 
+                        className="cursor-pointer flex items-center gap-2 font-normal"
+                      >
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: category.display_color }}
+                        />
+                        {category.category_name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : schedule ? "Update" : "Create"}
+              {loading ? "Saving..." : schedule ? "Update Session" : "Add Session"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
