@@ -39,63 +39,50 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
   const [newRoomName, setNewRoomName] = useState("");
   const [addingBuilding, setAddingBuilding] = useState(false);
   const [addingRoom, setAddingRoom] = useState(false);
-  const [allowAllGuestCategories, setAllowAllGuestCategories] = useState(true);
-  const [defaultCharge, setDefaultCharge] = useState<string>("");
-  const [guestCategoryCharges, setGuestCategoryCharges] = useState<Record<string, string>>({});
   const [guestCategories, setGuestCategories] = useState<any[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [chargeableCategories, setChargeableCategories] = useState<string[]>([]);
+  const [allowAllGuestCategories, setAllowAllGuestCategories] = useState(true);
+  const [chargeAmount, setChargeAmount] = useState("");
 
   useEffect(() => {
-    const fetchGuestCategories = async () => {
-      const { data, error } = await supabase
-        .from('event_guest_categories')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('category_level');
-      
-      if (!error && data) {
-        setGuestCategories(data);
-        const initialCharges: Record<string, string> = {};
-        data.forEach(cat => {
-          initialCharges[cat.id] = "0.00";
-        });
-        setGuestCategoryCharges(initialCharges);
-      }
-    };
-    
     if (open) {
+      const fetchGuestCategories = async () => {
+        const { data } = await supabase
+          .from('event_guest_categories')
+          .select('*')
+          .eq('event_id', eventId)
+          .order('category_level', { ascending: true });
+        
+        if (data) {
+          setGuestCategories(data);
+        }
+      };
+      
       fetchGuestCategories();
     }
   }, [open, eventId]);
 
   useEffect(() => {
-    const fetchExistingCharges = async () => {
-      if (session?.id) {
+    if (open && session) {
+      // Fetch guest category restrictions for this session
+      const fetchSessionCategories = async () => {
         const { data } = await supabase
           .from('event_food_session_guest_categories')
-          .select('guest_category_id, charge_amount')
+          .select('guest_category_id, is_chargeable')
           .eq('food_session_id', session.id);
         
-        if (data && data.length > 0) {
-          setAllowAllGuestCategories(false);
-          const charges: Record<string, string> = {};
-          data.forEach(item => {
-            charges[item.guest_category_id] = item.charge_amount?.toString() || "0.00";
-          });
-          setGuestCategoryCharges(charges);
-        } else {
-          setAllowAllGuestCategories(session.allow_all_guest_categories ?? true);
-          setDefaultCharge(session.default_charge_amount?.toString() || "");
+        if (data) {
+          const selected = data.map(item => item.guest_category_id);
+          const chargeable = data.filter(item => item.is_chargeable).map(item => item.guest_category_id);
+          setSelectedCategories(selected);
+          setChargeableCategories(chargeable);
         }
-      } else {
-        setAllowAllGuestCategories(true);
-        setDefaultCharge("");
-      }
-    };
-    
-    if (session) {
-      fetchExistingCharges();
+      };
+      
+      fetchSessionCategories();
     }
-  }, [session]);
+  }, [open, session]);
 
   useEffect(() => {
     if (session) {
@@ -109,6 +96,8 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
         estimated_attendees: session.estimated_attendees?.toString() || "",
         notes: session.notes || "",
       });
+      setAllowAllGuestCategories(session.allow_all_guest_categories ?? true);
+      setChargeAmount(session.default_charge_amount?.toString() || "");
     } else if (open) {
       setFormData({
         session_date: "",
@@ -120,6 +109,12 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
         estimated_attendees: "",
         notes: "",
       });
+      setNewBuildingName("");
+      setNewRoomName("");
+      setSelectedCategories([]);
+      setChargeableCategories([]);
+      setAllowAllGuestCategories(true);
+      setChargeAmount("");
     }
   }, [session, open]);
 
@@ -201,16 +196,14 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!allowAllGuestCategories) {
-      const hasAtLeastOneCategory = Object.keys(guestCategoryCharges).length > 0;
-      if (!hasAtLeastOneCategory) {
-        toast({
-          title: "Validation Error",
-          description: "Please add at least one guest category or enable 'No restrictions'.",
-          variant: "destructive",
-        });
-        return;
-      }
+    // Validate guest category selection if restrictions are enabled
+    if (!allowAllGuestCategories && selectedCategories.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one guest category that can attend.",
+        variant: "destructive",
+      });
+      return;
     }
     
     setLoading(true);
@@ -226,9 +219,7 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
       estimated_attendees: formData.estimated_attendees ? parseInt(formData.estimated_attendees) : null,
       notes: formData.notes || null,
       allow_all_guest_categories: allowAllGuestCategories,
-      default_charge_amount: allowAllGuestCategories && defaultCharge 
-        ? parseFloat(defaultCharge) 
-        : null,
+      default_charge_amount: parseFloat(chargeAmount) || null,
     };
 
     try {
@@ -253,38 +244,33 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
         sessionId = data.id;
       }
 
-      // Handle guest category charges
-      if (!allowAllGuestCategories) {
+      // Handle guest category restrictions
+      if (!allowAllGuestCategories && selectedCategories.length > 0) {
+        // Delete existing category assignments
         await supabase
           .from('event_food_session_guest_categories')
           .delete()
           .eq('food_session_id', sessionId);
-        
-        const charges = Object.entries(guestCategoryCharges)
-          .map(([categoryId, amount]) => ({
-            food_session_id: sessionId,
-            guest_category_id: categoryId,
-            charge_amount: parseFloat(amount) || 0.00,
-          }));
-        
-        if (charges.length > 0) {
-          const { error: chargeError } = await supabase
-            .from('event_food_session_guest_categories')
-            .insert(charges);
-          
-          if (chargeError) {
-            toast({
-              title: "Warning",
-              description: "Food session created but failed to save pricing.",
-              variant: "destructive",
-            });
-          }
+
+        // Insert new category assignments
+        const categoryRecords = selectedCategories.map(categoryId => ({
+          food_session_id: sessionId,
+          guest_category_id: categoryId,
+          is_chargeable: chargeableCategories.includes(categoryId),
+        }));
+
+        const { error: categoriesError } = await supabase
+          .from('event_food_session_guest_categories')
+          .insert(categoryRecords);
+
+        if (categoriesError) {
+          console.error("Error saving category restrictions:", categoriesError);
+          toast({
+            title: "Warning",
+            description: "Session saved but there was an issue with category restrictions.",
+            variant: "destructive",
+          });
         }
-      } else if (allowAllGuestCategories) {
-        await supabase
-          .from('event_food_session_guest_categories')
-          .delete()
-          .eq('food_session_id', sessionId);
       }
 
       toast({
@@ -388,76 +374,102 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
           <div className="space-y-4">
             <Label className="text-base font-semibold">Guest Category Pricing</Label>
             
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="allow-all-food"
-                checked={allowAllGuestCategories}
-                onCheckedChange={(checked) => {
-                  setAllowAllGuestCategories(!!checked);
-                }}
-              />
-              <Label htmlFor="allow-all-food" className="cursor-pointer font-normal">
-                No restrictions - Allow all guest categories
-              </Label>
-            </div>
-
-            {allowAllGuestCategories ? (
-              <div className="space-y-2">
-                <Label htmlFor="default-charge">Charge Amount (for all guests)</Label>
-                <Input
-                  id="default-charge"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00 (free)"
-                  value={defaultCharge}
-                  onChange={(e) => setDefaultCharge(e.target.value)}
+            <div className="space-y-4 p-4 rounded-lg border bg-muted/50">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="allow-all-categories"
+                  checked={allowAllGuestCategories}
+                  onCheckedChange={(checked) => setAllowAllGuestCategories(checked as boolean)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Leave empty or set to 0.00 to make this session free for all guests
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3 border rounded-lg p-4 max-h-64 overflow-y-auto">
-                <Label className="text-sm text-muted-foreground">
-                  Set charges per guest category (0.00 = free):
+                <Label htmlFor="allow-all-categories" className="text-sm font-normal cursor-pointer">
+                  No restrictions - Allow all guest categories
                 </Label>
-                
-                {guestCategories.map((category) => (
-                  <div key={category.id} className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full flex-shrink-0" 
-                        style={{ backgroundColor: category.display_color }}
+              </div>
+
+              {!allowAllGuestCategories && (
+                <div className="space-y-3 pl-6">
+                  <Label className="text-sm">Select which guest categories can attend:</Label>
+                  {guestCategories.map((category) => (
+                    <div key={category.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`cat-${category.id}`}
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedCategories([...selectedCategories, category.id]);
+                          } else {
+                            setSelectedCategories(selectedCategories.filter(id => id !== category.id));
+                            setChargeableCategories(chargeableCategories.filter(id => id !== category.id));
+                          }
+                        }}
                       />
-                      <Label htmlFor={`charge-${category.id}`} className="flex-1">
+                      <Label htmlFor={`cat-${category.id}`} className="text-sm font-normal cursor-pointer">
                         {category.category_name}
                       </Label>
-                      <Input
-                        id={`charge-${category.id}`}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        value={guestCategoryCharges[category.id] || "0.00"}
-                        onChange={(e) => {
-                          setGuestCategoryCharges({
-                            ...guestCategoryCharges,
-                            [category.id]: e.target.value,
-                          });
-                        }}
-                        className="w-32"
-                      />
                     </div>
-                  </div>
-                ))}
-                
-                <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
-                  <p>• Categories not listed will not be allowed to access this food session</p>
-                  <p>• Set to 0.00 to make it free for specific categories</p>
+                  ))}
                 </div>
-              </div>
-            )}
+              )}
+
+              {(allowAllGuestCategories || selectedCategories.length > 0) && (
+                <div className="pl-6 space-y-3 border-t pt-3">
+                  <Label htmlFor="charge-amount">Charge Amount</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">$</span>
+                    <Input
+                      id="charge-amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00 (free for all)"
+                      value={chargeAmount}
+                      onChange={(e) => setChargeAmount(e.target.value)}
+                      className="w-32"
+                    />
+                  </div>
+
+                  {!allowAllGuestCategories && parseFloat(chargeAmount) > 0 && selectedCategories.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                      <Label className="text-sm">Which categories should be charged ${chargeAmount}?</Label>
+                      {selectedCategories.map(categoryId => {
+                        const category = guestCategories.find(c => c.id === categoryId);
+                        return (
+                          <div key={categoryId} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`charge-${categoryId}`}
+                              checked={chargeableCategories.includes(categoryId)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setChargeableCategories([...chargeableCategories, categoryId]);
+                                } else {
+                                  setChargeableCategories(chargeableCategories.filter(id => id !== categoryId));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`charge-${categoryId}`} className="text-sm font-normal cursor-pointer">
+                              {category?.category_name}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                      <p className="text-xs text-muted-foreground">
+                        Categories not checked above will attend free
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty or 0 for free attendance
+                  </p>
+
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                    <p className="text-xs text-blue-800 dark:text-blue-200">
+                      💡 <strong>Coming Soon:</strong> Multiple charge tiers (different prices for veg/non-veg/vegan, etc.) are in development!
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <DialogFooter>

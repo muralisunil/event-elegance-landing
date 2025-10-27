@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Clock, MapPin, Trash2, Pencil, Calendar, ChevronDown, Building2, DoorOpen } from "lucide-react";
+import { Edit, Trash2, Plus, Building2, DoorOpen, Users, Monitor, Link as LinkIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AddScheduleDialog from "./AddScheduleDialog";
 import { formatFieldName, getSessionTypeLabel } from "@/lib/scheduleTemplates";
@@ -219,22 +219,69 @@ const ScheduleTab = ({ eventId, eventTypes }: ScheduleTabProps) => {
                   <Clock className="mr-2 h-4 w-4" />
                   {schedule.start_time} - {schedule.end_time}
                 </div>
-                {schedule.location && (
+
+                {/* Session Mode Display */}
+                {schedule.session_mode === 'online' && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Monitor className="h-4 w-4" />
+                    <span>Online</span>
+                    {schedule.online_link && (
+                      <a 
+                        href={schedule.online_link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1"
+                      >
+                        <LinkIcon className="h-3 w-3" />
+                        Join
+                      </a>
+                    )}
+                  </div>
+                )}
+                
+                {schedule.session_mode === 'in_person' && schedule.building_id && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Building2 className="h-4 w-4" />
+                    <span>
+                      {buildings.find(b => b.id === schedule.building_id)?.building_name}
+                      {schedule.room_id && ` - ${rooms.find(r => r.id === schedule.room_id)?.room_name}`}
+                    </span>
+                  </div>
+                )}
+                
+                {schedule.session_mode === 'hybrid' && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                    {schedule.building_id && (
+                      <>
+                        <Building2 className="h-4 w-4" />
+                        <span>
+                          {buildings.find(b => b.id === schedule.building_id)?.building_name}
+                          {schedule.room_id && ` - ${rooms.find(r => r.id === schedule.room_id)?.room_name}`}
+                        </span>
+                      </>
+                    )}
+                    {schedule.online_link && (
+                      <>
+                        <span className="text-muted-foreground">+</span>
+                        <Monitor className="h-4 w-4" />
+                        <a 
+                          href={schedule.online_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline flex items-center gap-1"
+                        >
+                          <LinkIcon className="h-3 w-3" />
+                          Join Online
+                        </a>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {(!schedule.session_mode || schedule.session_mode === 'in_person') && schedule.location && !schedule.building_id && (
                   <div className="flex items-center text-sm text-muted-foreground">
                     <MapPin className="mr-2 h-4 w-4" />
                     {schedule.location}
-                  </div>
-                )}
-                {schedule.building_id && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Building2 className="h-4 w-4" />
-                    {buildings.find(b => b.id === schedule.building_id)?.building_name}
-                    {schedule.room_id && (
-                      <>
-                        <DoorOpen className="h-3 w-3" />
-                        {rooms.find(r => r.id === schedule.room_id)?.room_name}
-                      </>
-                    )}
                   </div>
                 )}
                 {schedule.description && (

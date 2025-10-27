@@ -46,6 +46,8 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
   const [allowAllGuestCategories, setAllowAllGuestCategories] = useState(true);
   const [selectedGuestCategories, setSelectedGuestCategories] = useState<string[]>([]);
   const [guestCategories, setGuestCategories] = useState<any[]>([]);
+  const [sessionMode, setSessionMode] = useState<'in_person' | 'online' | 'hybrid'>('in_person');
+  const [onlineLink, setOnlineLink] = useState("");
 
   const currentTemplate = scheduleTemplates[formData.session_type] || scheduleTemplates.default;
 
@@ -105,6 +107,9 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
         building_id: schedule.building_id || "",
         room_id: schedule.room_id || "",
       });
+      setAllowAllGuestCategories(schedule.allow_all_guest_categories ?? true);
+      setSessionMode(schedule.session_mode || 'in_person');
+      setOnlineLink(schedule.online_link || "");
     } else {
       setFormData({
         session_title: "",
@@ -116,6 +121,13 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
         metadata: {},
         building_id: "",
         room_id: "",
+      });
+      setNewBuildingName("");
+      setNewRoomName("");
+      setAllowAllGuestCategories(true);
+      setSelectedGuestCategories([]);
+      setSessionMode('in_person');
+      setOnlineLink("");
       });
     }
   }, [schedule, open, eventTypes, preselectedSessionType]);
@@ -196,7 +208,14 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       .map(field => field.label);
 
     if (missingFields.length > 0) {
+    if (!formData.session_title.trim() || !formData.start_time || !formData.end_time) {
       toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
         title: "Missing Required Fields",
         description: `Please fill in: ${missingFields.join(', ')}`,
         variant: "destructive",
@@ -493,9 +512,53 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
             )}
           </div>
 
-          {buildings.length > 0 && (
+          {/* Session Mode Section */}
+          <div className="space-y-4 p-4 rounded-lg border bg-muted/50">
+            <h3 className="font-medium text-sm">Session Mode</h3>
+            
+            <div className="space-y-2">
+              <Label>How will this session be conducted?</Label>
+              <Select
+                value={sessionMode}
+                onValueChange={(value: any) => setSessionMode(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="in_person">In-Person Only</SelectItem>
+                  <SelectItem value="online">Online Only</SelectItem>
+                  <SelectItem value="hybrid">Hybrid (In-Person + Online)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(sessionMode === 'online' || sessionMode === 'hybrid') && (
+              <div>
+                <Label htmlFor="online_link">
+                  Online Meeting Link {sessionMode === 'online' && '*'}
+                </Label>
+                <Input
+                  id="online_link"
+                  type="url"
+                  placeholder="https://zoom.us/j/... or meet.google.com/..."
+                  value={onlineLink}
+                  onChange={(e) => setOnlineLink(e.target.value)}
+                  required={sessionMode === 'online'}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Zoom, Google Meet, Teams, or any video conferencing link
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Venue & Room Section */}
+          {(sessionMode === 'in_person' || sessionMode === 'hybrid') && buildings.length > 0 && (
             <div className="space-y-4 p-4 rounded-lg border bg-muted/50">
-              <h3 className="font-medium text-sm">Venue & Room</h3>
+              <h3 className="font-medium text-sm">
+                Venue & Room {sessionMode === 'in_person' && '(Required)'}
+              </h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>

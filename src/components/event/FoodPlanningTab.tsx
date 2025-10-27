@@ -116,7 +116,7 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
           data.map(async (session) => {
             const { data: pricing } = await supabase
               .from('event_food_session_guest_categories')
-              .select('guest_category_id, charge_amount')
+              .select('guest_category_id, is_chargeable')
               .eq('food_session_id', session.id);
             
             if (pricing && pricing.length > 0) {
@@ -293,47 +293,36 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
                     )}
                     
                     {/* Pricing Information */}
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 pt-3 border-t">
+                      <Label className="text-xs text-muted-foreground mb-2">Pricing</Label>
                       {session.allow_all_guest_categories ? (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Badge variant="secondary">All Guests</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">All Guests</Badge>
                           {session.default_charge_amount && session.default_charge_amount > 0 ? (
-                            <span className="font-semibold">
-                              ${Number(session.default_charge_amount).toFixed(2)}
-                            </span>
+                            <span className="text-sm font-medium">${session.default_charge_amount.toFixed(2)} per person</span>
                           ) : (
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                              Free
-                            </Badge>
+                            <Badge variant="secondary">Free</Badge>
                           )}
                         </div>
-                      ) : sessionPricing[session.id] ? (
-                        <div className="space-y-1">
-                          <Label className="text-xs text-muted-foreground">Category Pricing:</Label>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label className="text-xs">Allowed Categories:</Label>
                           <div className="flex flex-wrap gap-2">
-                            {sessionPricing[session.id].map(item => {
-                              const cat = guestCategories.find(c => c.id === item.guest_category_id);
-                              return cat ? (
-                                <div 
-                                  key={item.guest_category_id}
-                                  className="flex items-center gap-1 text-xs border rounded px-2 py-1"
-                                >
-                                  <div 
-                                    className="w-2 h-2 rounded-full" 
-                                    style={{ backgroundColor: cat.display_color }}
-                                  />
-                                  <span>{cat.category_name}</span>
-                                  <span className="font-semibold">
-                                    {item.charge_amount > 0 
-                                      ? `$${Number(item.charge_amount).toFixed(2)}` 
-                                      : 'Free'}
-                                  </span>
-                                </div>
-                              ) : null;
+                            {sessionPricing[session.id]?.map(sp => {
+                              const cat = guestCategories.find(c => c.id === sp.guest_category_id);
+                              return (
+                                <Badge key={sp.guest_category_id} variant="outline">
+                                  {cat?.category_name}
+                                  {sp.is_chargeable && session.default_charge_amount && session.default_charge_amount > 0
+                                    ? ` - $${session.default_charge_amount.toFixed(2)}`
+                                    : ' - Free'
+                                  }
+                                </Badge>
+                              );
                             })}
                           </div>
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">

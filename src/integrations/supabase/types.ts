@@ -217,27 +217,27 @@ export type Database = {
       }
       event_food_session_guest_categories: {
         Row: {
-          charge_amount: number | null
           created_at: string
           food_session_id: string
           guest_category_id: string
           id: string
+          is_chargeable: boolean | null
           updated_at: string
         }
         Insert: {
-          charge_amount?: number | null
           created_at?: string
           food_session_id: string
           guest_category_id: string
           id?: string
+          is_chargeable?: boolean | null
           updated_at?: string
         }
         Update: {
-          charge_amount?: number | null
           created_at?: string
           food_session_id?: string
           guest_category_id?: string
           id?: string
+          is_chargeable?: boolean | null
           updated_at?: string
         }
         Relationships: [
@@ -651,8 +651,10 @@ export type Database = {
           id: string
           location: string | null
           metadata: Json | null
+          online_link: string | null
           order_index: number
           room_id: string | null
+          session_mode: string | null
           session_title: string
           session_type: string | null
           speaker: string | null
@@ -669,8 +671,10 @@ export type Database = {
           id?: string
           location?: string | null
           metadata?: Json | null
+          online_link?: string | null
           order_index?: number
           room_id?: string | null
+          session_mode?: string | null
           session_title: string
           session_type?: string | null
           speaker?: string | null
@@ -687,8 +691,10 @@ export type Database = {
           id?: string
           location?: string | null
           metadata?: Json | null
+          online_link?: string | null
           order_index?: number
           room_id?: string | null
+          session_mode?: string | null
           session_title?: string
           session_type?: string | null
           speaker?: string | null
