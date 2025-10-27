@@ -25,6 +25,9 @@ const PersonalOverviewTab = ({ event }: PersonalOverviewTabProps) => {
   const [venue, setVenue] = useState<any>(null);
   const [guestCategories, setGuestCategories] = useState<any[]>([]);
   const [config, setConfig] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [typesDialogOpen, setTypesDialogOpen] = useState(false);
+  const [categoriesDialogOpen, setCategoriesDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchAllData();
@@ -188,8 +191,12 @@ const PersonalOverviewTab = ({ event }: PersonalOverviewTabProps) => {
 
       {/* Event Information */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Event Information</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">

@@ -15,6 +15,10 @@ import PersonalOverviewTab from "@/components/personal-event/PersonalOverviewTab
 import PersonalGuestsTab from "@/components/personal-event/PersonalGuestsTab";
 import PersonalVenuesTab from "@/components/personal-event/PersonalVenuesTab";
 import PersonalSettingsTab from "@/components/personal-event/PersonalSettingsTab";
+import PersonalScheduleTab from "@/components/personal-event/PersonalScheduleTab";
+import PersonalLogisticsTab from "@/components/personal-event/PersonalLogisticsTab";
+import PersonalTasksTab from "@/components/personal-event/PersonalTasksTab";
+import PersonalOrganizersTab from "@/components/personal-event/PersonalOrganizersTab";
 
 const ManagePersonalEvent = () => {
   const { eventId } = useParams();
@@ -180,9 +184,9 @@ const ManagePersonalEvent = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="settings">
-          <PersonalSettingsTab />
-        </TabsContent>
+            <TabsContent value="settings">
+              <PersonalSettingsTab eventId={eventId} config={config} onConfigUpdate={handleConfigUpdate} />
+            </TabsContent>
       </Tabs>
     </div>
   );

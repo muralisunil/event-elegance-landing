@@ -35,6 +35,8 @@ const PersonalGuestsTab = ({ eventId }: PersonalGuestsTabProps) => {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [filterTag, setFilterTag] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingGuest, setEditingGuest] = useState<any>(null);
 
   useEffect(() => {
     fetchGuests();
