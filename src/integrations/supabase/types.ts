@@ -217,6 +217,7 @@ export type Database = {
       }
       event_food_sessions: {
         Row: {
+          building_id: string | null
           created_at: string
           estimated_attendees: number | null
           event_id: string
@@ -224,11 +225,13 @@ export type Database = {
           location: string | null
           meal_type: string
           notes: string | null
+          room_id: string | null
           session_date: string
           session_time: string | null
           updated_at: string
         }
         Insert: {
+          building_id?: string | null
           created_at?: string
           estimated_attendees?: number | null
           event_id: string
@@ -236,11 +239,13 @@ export type Database = {
           location?: string | null
           meal_type: string
           notes?: string | null
+          room_id?: string | null
           session_date: string
           session_time?: string | null
           updated_at?: string
         }
         Update: {
+          building_id?: string | null
           created_at?: string
           estimated_attendees?: number | null
           event_id?: string
@@ -248,16 +253,31 @@ export type Database = {
           location?: string | null
           meal_type?: string
           notes?: string | null
+          room_id?: string | null
           session_date?: string
           session_time?: string | null
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "event_food_sessions_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "event_buildings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_food_sessions_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_food_sessions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "event_rooms"
             referencedColumns: ["id"]
           },
         ]

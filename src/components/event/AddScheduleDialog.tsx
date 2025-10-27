@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { scheduleTemplates, getEventTypeLabel, type ScheduleField } from "@/lib/scheduleTemplates";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 
 interface AddScheduleDialogProps {
   open: boolean;
@@ -37,6 +38,10 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
   });
   const [loading, setLoading] = useState(false);
   const [conflicts, setConflicts] = useState<string[]>([]);
+  const [newBuildingName, setNewBuildingName] = useState("");
+  const [newRoomName, setNewRoomName] = useState("");
+  const [addingBuilding, setAddingBuilding] = useState(false);
+  const [addingRoom, setAddingRoom] = useState(false);
 
   const currentTemplate = scheduleTemplates[formData.session_type] || scheduleTemplates.default;
 
@@ -67,6 +72,63 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       });
     }
   }, [schedule, open, eventTypes, preselectedSessionType]);
+
+  const handleQuickAddBuilding = async () => {
+    if (!newBuildingName.trim()) return;
+    
+    setAddingBuilding(true);
+    const { data, error } = await supabase
+      .from("event_buildings")
+      .insert({
+        event_id: eventId,
+        building_name: newBuildingName.trim(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add building.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Success", description: "Building added successfully." });
+      setFormData(prev => ({ ...prev, building_id: data.id }));
+      setNewBuildingName("");
+      onSuccess(); // Refresh buildings list
+    }
+    setAddingBuilding(false);
+  };
+
+  const handleQuickAddRoom = async () => {
+    if (!newRoomName.trim() || !formData.building_id) return;
+    
+    setAddingRoom(true);
+    const { data, error } = await supabase
+      .from("event_rooms")
+      .insert({
+        event_id: eventId,
+        building_id: formData.building_id,
+        room_name: newRoomName.trim(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add room.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Success", description: "Room added successfully." });
+      setFormData(prev => ({ ...prev, room_id: data.id }));
+      setNewRoomName("");
+      onSuccess(); // Refresh rooms list
+    }
+    setAddingRoom(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -359,6 +421,32 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                           {building.building_name}
                         </SelectItem>
                       ))}
+                      <Separator className="my-2" />
+                      <div className="p-2 space-y-2">
+                        <Label className="text-xs text-muted-foreground">Quick Add</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Building name"
+                            value={newBuildingName}
+                            onChange={(e) => setNewBuildingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleQuickAddBuilding();
+                              }
+                            }}
+                            className="h-8"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleQuickAddBuilding}
+                            disabled={!newBuildingName.trim() || addingBuilding}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
@@ -390,6 +478,33 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                             {room.room_name} {room.capacity && `(${room.capacity} pax)`}
                           </SelectItem>
                         ))}
+                      <Separator className="my-2" />
+                      <div className="p-2 space-y-2">
+                        <Label className="text-xs text-muted-foreground">Quick Add</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Room name"
+                            value={newRoomName}
+                            onChange={(e) => setNewRoomName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleQuickAddRoom();
+                              }
+                            }}
+                            className="h-8"
+                            disabled={!formData.building_id}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleQuickAddRoom}
+                            disabled={!newRoomName.trim() || !formData.building_id || addingRoom}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>

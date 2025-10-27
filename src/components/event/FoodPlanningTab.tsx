@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Calendar, MapPin, Users, DollarSign, UtensilsCrossed } from "lucide-react";
+import { Plus, Calendar, MapPin, Users, DollarSign, UtensilsCrossed, Building2, DoorOpen, Pencil, Trash2 } from "lucide-react";
 import { AddFoodSessionDialog } from "./AddFoodSessionDialog";
 import { FoodMenuManager } from "./FoodMenuManager";
 
@@ -18,6 +19,8 @@ interface FoodSession {
   session_date: string;
   meal_type: string;
   session_time: string | null;
+  building_id?: string | null;
+  room_id?: string | null;
   location: string | null;
   estimated_attendees: number | null;
   notes: string | null;
@@ -30,6 +33,10 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [menuManagerOpen, setMenuManagerOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<FoodSession | null>(null);
+  const [editingSession, setEditingSession] = useState<FoodSession | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [buildings, setBuildings] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalCost: 0,
     totalSessions: 0,
@@ -38,7 +45,25 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
   useEffect(() => {
     fetchSessions();
     fetchStats();
+    fetchBuildingsAndRooms();
   }, [eventId]);
+
+  const fetchBuildingsAndRooms = async () => {
+    const { data: buildingsData } = await supabase
+      .from('event_buildings')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('order_index');
+    
+    const { data: roomsData } = await supabase
+      .from('event_rooms')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('order_index');
+    
+    setBuildings(buildingsData || []);
+    setRooms(roomsData || []);
+  };
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -113,6 +138,31 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
     setMenuManagerOpen(true);
   };
 
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    const { error } = await supabase
+      .from('event_food_sessions')
+      .delete()
+      .eq('id', deleteId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete food session.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Food session deleted successfully.",
+      });
+      fetchSessions();
+      fetchStats();
+    }
+    setDeleteId(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -180,6 +230,18 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
                       </span>
                     </div>
                     <div className="space-y-1 text-sm">
+                      {session.building_id && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Building2 className="h-4 w-4" />
+                          {buildings.find(b => b.id === session.building_id)?.building_name}
+                          {session.room_id && (
+                            <>
+                              <DoorOpen className="h-3 w-3" />
+                              {rooms.find(r => r.id === session.room_id)?.room_name}
+                            </>
+                          )}
+                        </div>
+                      )}
                       {session.location && (
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <MapPin className="h-3 w-3" />
@@ -197,13 +259,29 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
                       <p className="text-sm text-muted-foreground">{session.notes}</p>
                     )}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openMenuManager(session)}
-                  >
-                    Manage Menu ({session.item_count || 0})
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openMenuManager(session)}
+                    >
+                      Manage Menu ({session.item_count || 0})
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => { setEditingSession(session); setDialogOpen(true); }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteId(session.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -213,12 +291,19 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
 
       <AddFoodSessionDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingSession(null);
+        }}
         eventId={eventId}
         event={event}
+        session={editingSession}
+        buildings={buildings}
+        rooms={rooms}
         onSuccess={() => {
           fetchSessions();
           fetchStats();
+          fetchBuildingsAndRooms();
         }}
       />
 
@@ -231,6 +316,21 @@ export const FoodPlanningTab = ({ eventId, event }: FoodPlanningTabProps) => {
           onSuccess={fetchStats}
         />
       )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Food Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this food session? This will also delete all menu items associated with it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
