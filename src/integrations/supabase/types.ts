@@ -1374,11 +1374,918 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_event_configurations: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          feature_food_planning_enabled: boolean | null
+          feature_logistics_enabled: boolean | null
+          feature_marketplace_enabled: boolean | null
+          feature_schedule_enabled: boolean | null
+          feature_tasks_enabled: boolean | null
+          feature_venues_enabled: boolean | null
+          id: string
+          invitation_image_url: string | null
+          is_published: boolean | null
+          published_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          feature_food_planning_enabled?: boolean | null
+          feature_logistics_enabled?: boolean | null
+          feature_marketplace_enabled?: boolean | null
+          feature_schedule_enabled?: boolean | null
+          feature_tasks_enabled?: boolean | null
+          feature_venues_enabled?: boolean | null
+          id?: string
+          invitation_image_url?: string | null
+          is_published?: boolean | null
+          published_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          feature_food_planning_enabled?: boolean | null
+          feature_logistics_enabled?: boolean | null
+          feature_marketplace_enabled?: boolean | null
+          feature_schedule_enabled?: boolean | null
+          feature_tasks_enabled?: boolean | null
+          feature_venues_enabled?: boolean | null
+          id?: string
+          invitation_image_url?: string | null
+          is_published?: boolean | null
+          published_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_configurations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_food_items: {
+        Row: {
+          assigned_guest_id: string | null
+          created_at: string | null
+          food_session_id: string
+          food_type: string
+          id: string
+          item_name: string
+          marketplace_vendor_id: string | null
+          notes: string | null
+          quantity: string | null
+          source: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_guest_id?: string | null
+          created_at?: string | null
+          food_session_id: string
+          food_type: string
+          id?: string
+          item_name: string
+          marketplace_vendor_id?: string | null
+          notes?: string | null
+          quantity?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_guest_id?: string | null
+          created_at?: string | null
+          food_session_id?: string
+          food_type?: string
+          id?: string
+          item_name?: string
+          marketplace_vendor_id?: string | null
+          notes?: string | null
+          quantity?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_food_items_assigned_guest_id_fkey"
+            columns: ["assigned_guest_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_guests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_food_items_food_session_id_fkey"
+            columns: ["food_session_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_food_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_food_session_guest_categories: {
+        Row: {
+          created_at: string | null
+          food_session_id: string
+          guest_category_id: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          food_session_id: string
+          guest_category_id: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          food_session_id?: string
+          guest_category_id?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_food_session_guest_catego_guest_category_id_fkey"
+            columns: ["guest_category_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_guest_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_food_session_guest_categori_food_session_id_fkey"
+            columns: ["food_session_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_food_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_food_sessions: {
+        Row: {
+          allow_all_guest_categories: boolean | null
+          created_at: string | null
+          estimated_attendees: number | null
+          event_id: string
+          id: string
+          location: string | null
+          meal_type: string
+          notes: string | null
+          session_date: string
+          session_time: string | null
+          updated_at: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          allow_all_guest_categories?: boolean | null
+          created_at?: string | null
+          estimated_attendees?: number | null
+          event_id: string
+          id?: string
+          location?: string | null
+          meal_type: string
+          notes?: string | null
+          session_date: string
+          session_time?: string | null
+          updated_at?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          allow_all_guest_categories?: boolean | null
+          created_at?: string | null
+          estimated_attendees?: number | null
+          event_id?: string
+          id?: string
+          location?: string | null
+          meal_type?: string
+          notes?: string | null
+          session_date?: string
+          session_time?: string | null
+          updated_at?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_food_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_food_sessions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_guest_categories: {
+        Row: {
+          benefits: string | null
+          category_name: string
+          created_at: string | null
+          display_color: string | null
+          event_id: string
+          id: string
+          max_guests: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          benefits?: string | null
+          category_name: string
+          created_at?: string | null
+          display_color?: string | null
+          event_id: string
+          id?: string
+          max_guests?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          benefits?: string | null
+          category_name?: string
+          created_at?: string | null
+          display_color?: string | null
+          event_id?: string
+          id?: string
+          max_guests?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_guest_categories_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_guests: {
+        Row: {
+          created_at: string | null
+          dietary_preferences: string | null
+          email: string
+          event_id: string
+          guest_category_id: string | null
+          id: string
+          internal_classification: string | null
+          internal_notes: string | null
+          invitation_status: string | null
+          name: string
+          num_accompanies: number | null
+          phone: string | null
+          rsvp_date: string | null
+          special_requirements: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dietary_preferences?: string | null
+          email: string
+          event_id: string
+          guest_category_id?: string | null
+          id?: string
+          internal_classification?: string | null
+          internal_notes?: string | null
+          invitation_status?: string | null
+          name: string
+          num_accompanies?: number | null
+          phone?: string | null
+          rsvp_date?: string | null
+          special_requirements?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dietary_preferences?: string | null
+          email?: string
+          event_id?: string
+          guest_category_id?: string | null
+          id?: string
+          internal_classification?: string | null
+          internal_notes?: string | null
+          invitation_status?: string | null
+          name?: string
+          num_accompanies?: number | null
+          phone?: string | null
+          rsvp_date?: string | null
+          special_requirements?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_guests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_guests_guest_category_id_fkey"
+            columns: ["guest_category_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_guest_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_invitations: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          guest_id: string
+          id: string
+          invitation_code: string
+          opened_at: string | null
+          responded_at: string | null
+          response: string | null
+          sent_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          guest_id: string
+          id?: string
+          invitation_code: string
+          opened_at?: string | null
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          guest_id?: string
+          id?: string
+          invitation_code?: string
+          opened_at?: string | null
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_invitations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_invitations_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_logistics: {
+        Row: {
+          actual_cost: number | null
+          assigned_guest_id: string | null
+          category: string
+          created_at: string | null
+          estimated_cost: number | null
+          event_id: string
+          id: string
+          item_name: string
+          marketplace_vendor_id: string | null
+          notes: string | null
+          quantity: number | null
+          source: string | null
+          status: string | null
+          updated_at: string | null
+          vendor: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          assigned_guest_id?: string | null
+          category: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          event_id: string
+          id?: string
+          item_name: string
+          marketplace_vendor_id?: string | null
+          notes?: string | null
+          quantity?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vendor?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          assigned_guest_id?: string | null
+          category?: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          event_id?: string
+          id?: string
+          item_name?: string
+          marketplace_vendor_id?: string | null
+          notes?: string | null
+          quantity?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_logistics_assigned_guest_id_fkey"
+            columns: ["assigned_guest_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_guests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_logistics_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_organizers: {
+        Row: {
+          accepted_at: string | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          email: string
+          event_id: string
+          id: string
+          invited_at: string | null
+          name: string
+          role: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          email: string
+          event_id: string
+          id?: string
+          invited_at?: string | null
+          name: string
+          role?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          email?: string
+          event_id?: string
+          id?: string
+          invited_at?: string | null
+          name?: string
+          role?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_organizers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_schedules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_time: string
+          event_id: string
+          id: string
+          location: string | null
+          notes: string | null
+          order_index: number | null
+          session_title: string
+          start_time: string
+          updated_at: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          event_id: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          order_index?: number | null
+          session_title: string
+          start_time: string
+          updated_at?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          event_id?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          order_index?: number | null
+          session_title?: string
+          start_time?: string
+          updated_at?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_schedules_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_schedules_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_task_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string
+          assignee_type: string
+          guest_id: string | null
+          id: string
+          task_id: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by: string
+          assignee_type: string
+          guest_id?: string | null
+          id?: string
+          task_id: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string
+          assignee_type?: string
+          guest_id?: string | null
+          id?: string
+          task_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_task_assignments_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_guests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_task_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_task_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          id: string
+          is_system_message: boolean | null
+          task_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          id?: string
+          is_system_message?: boolean | null
+          task_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          id?: string
+          is_system_message?: boolean | null
+          task_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_task_reminders: {
+        Row: {
+          created_at: string | null
+          id: string
+          remind_at: string
+          reminder_type: string | null
+          sent_at: string | null
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          remind_at: string
+          reminder_type?: string | null
+          sent_at?: string | null
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          remind_at?: string
+          reminder_type?: string | null
+          sent_at?: string | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_task_reminders_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_tasks: {
+        Row: {
+          actual_hours: number | null
+          ai_suggestion_reason: string | null
+          category: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          due_date: string | null
+          due_date_type: Database["public"]["Enums"]["due_date_type"] | null
+          estimated_hours: number | null
+          event_id: string
+          id: string
+          is_ai_suggested: boolean | null
+          order_index: number | null
+          priority: Database["public"]["Enums"]["task_priority"] | null
+          relative_days: number | null
+          relative_hours: number | null
+          relative_to_food_session_id: string | null
+          relative_to_session_id: string | null
+          status: Database["public"]["Enums"]["task_status"] | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          actual_hours?: number | null
+          ai_suggestion_reason?: string | null
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          due_date_type?: Database["public"]["Enums"]["due_date_type"] | null
+          estimated_hours?: number | null
+          event_id: string
+          id?: string
+          is_ai_suggested?: boolean | null
+          order_index?: number | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          relative_days?: number | null
+          relative_hours?: number | null
+          relative_to_food_session_id?: string | null
+          relative_to_session_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          actual_hours?: number | null
+          ai_suggestion_reason?: string | null
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          due_date_type?: Database["public"]["Enums"]["due_date_type"] | null
+          estimated_hours?: number | null
+          event_id?: string
+          id?: string
+          is_ai_suggested?: boolean | null
+          order_index?: number | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          relative_days?: number | null
+          relative_hours?: number | null
+          relative_to_food_session_id?: string | null
+          relative_to_session_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_tasks_relative_to_food_session_id_fkey"
+            columns: ["relative_to_food_session_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_food_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_event_tasks_relative_to_session_id_fkey"
+            columns: ["relative_to_session_id"]
+            isOneToOne: false
+            referencedRelation: "personal_event_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_event_venues: {
+        Row: {
+          address: string | null
+          capacity: number | null
+          created_at: string | null
+          event_id: string
+          facilities: string | null
+          id: string
+          notes: string | null
+          order_index: number | null
+          updated_at: string | null
+          venue_name: string
+        }
+        Insert: {
+          address?: string | null
+          capacity?: number | null
+          created_at?: string | null
+          event_id: string
+          facilities?: string | null
+          id?: string
+          notes?: string | null
+          order_index?: number | null
+          updated_at?: string | null
+          venue_name: string
+        }
+        Update: {
+          address?: string | null
+          capacity?: number | null
+          created_at?: string | null
+          event_id?: string
+          facilities?: string | null
+          id?: string
+          notes?: string | null
+          order_index?: number | null
+          updated_at?: string | null
+          venue_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_venues_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_events: {
+        Row: {
+          age_restriction: string | null
+          allow_accompanies: boolean | null
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          event_date: string
+          event_end_date: string | null
+          event_end_time: string | null
+          event_time: string
+          event_types: string[]
+          goal: string | null
+          id: string
+          is_multi_day: boolean | null
+          is_private: boolean | null
+          is_unlimited_guests: boolean | null
+          location: string
+          max_accompanies_per_guest: number | null
+          max_guests: number | null
+          name: string
+          purpose: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          age_restriction?: string | null
+          allow_accompanies?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_date: string
+          event_end_date?: string | null
+          event_end_time?: string | null
+          event_time: string
+          event_types: string[]
+          goal?: string | null
+          id?: string
+          is_multi_day?: boolean | null
+          is_private?: boolean | null
+          is_unlimited_guests?: boolean | null
+          location: string
+          max_accompanies_per_guest?: number | null
+          max_guests?: number | null
+          name: string
+          purpose?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          age_restriction?: string | null
+          allow_accompanies?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_date?: string
+          event_end_date?: string | null
+          event_end_time?: string | null
+          event_time?: string
+          event_types?: string[]
+          goal?: string | null
+          id?: string
+          is_multi_day?: boolean | null
+          is_private?: boolean | null
+          is_unlimited_guests?: boolean | null
+          location?: string
+          max_accompanies_per_guest?: number | null
+          max_guests?: number | null
+          name?: string
+          purpose?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      calculate_personal_task_due_date: {
+        Args: {
+          _task: Database["public"]["Tables"]["personal_event_tasks"]["Row"]
+        }
+        Returns: string
+      }
       calculate_task_due_date: {
         Args: { _task: Database["public"]["Tables"]["event_tasks"]["Row"] }
         Returns: string
@@ -1387,7 +2294,15 @@ export type Database = {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
+      can_manage_personal_event_tasks: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_event_tasks: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_personal_event_tasks: {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
