@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Users, DollarSign, UtensilsCrossed } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Clock, Users, DollarSign, UtensilsCrossed } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -209,12 +209,6 @@ export const PersonalFoodPlanningTab = ({ eventId, event }: PersonalFoodPlanning
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
                           {format(new Date(`2000-01-01T${session.session_time}`), 'p')}
-                        </div>
-                      )}
-                      {session.venue_name && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          {session.venue_name}
                         </div>
                       )}
                       {session.estimated_attendees && (

@@ -1542,7 +1542,7 @@ export type Database = {
           estimated_attendees: number | null
           event_id: string
           id: string
-          location: string | null
+          is_pot_luck_style: boolean | null
           meal_type: string
           notes: string | null
           session_date: string
@@ -1556,7 +1556,7 @@ export type Database = {
           estimated_attendees?: number | null
           event_id: string
           id?: string
-          location?: string | null
+          is_pot_luck_style?: boolean | null
           meal_type: string
           notes?: string | null
           session_date: string
@@ -1570,7 +1570,7 @@ export type Database = {
           estimated_attendees?: number | null
           event_id?: string
           id?: string
-          location?: string | null
+          is_pot_luck_style?: boolean | null
           meal_type?: string
           notes?: string | null
           session_date?: string

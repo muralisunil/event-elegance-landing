@@ -30,9 +30,9 @@ export const AddPersonalFoodSessionDialog = ({
     session_date: "",
     meal_type: "lunch",
     session_time: "",
-    location: "",
     estimated_attendees: "",
     notes: "",
+    is_pot_luck_style: false,
   });
   const [loading, setLoading] = useState(false);
 
@@ -42,18 +42,18 @@ export const AddPersonalFoodSessionDialog = ({
         session_date: session.session_date || "",
         meal_type: session.meal_type || "lunch",
         session_time: session.session_time || "",
-        location: session.location || "",
         estimated_attendees: session.estimated_attendees?.toString() || "",
         notes: session.notes || "",
+        is_pot_luck_style: session.is_pot_luck_style || false,
       });
     } else if (open) {
       setFormData({
         session_date: "",
         meal_type: "lunch",
         session_time: "",
-        location: "",
         estimated_attendees: "",
         notes: "",
+        is_pot_luck_style: false,
       });
     }
   }, [session, open]);
@@ -67,9 +67,9 @@ export const AddPersonalFoodSessionDialog = ({
       session_date: formData.session_date,
       meal_type: formData.meal_type,
       session_time: formData.session_time || null,
-      location: formData.location || null,
       estimated_attendees: formData.estimated_attendees ? parseInt(formData.estimated_attendees) : null,
       notes: formData.notes || null,
+      is_pot_luck_style: formData.is_pot_luck_style,
     };
 
     try {
@@ -156,16 +156,6 @@ export const AddPersonalFoodSessionDialog = ({
           </div>
 
           <div>
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="e.g., Main Hall, Backyard, etc."
-            />
-          </div>
-
-          <div>
             <Label htmlFor="estimated_attendees">Estimated Attendees</Label>
             <Input
               id="estimated_attendees"
@@ -184,6 +174,19 @@ export const AddPersonalFoodSessionDialog = ({
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={2}
             />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="is_pot_luck_style"
+              checked={formData.is_pot_luck_style}
+              onChange={(e) => setFormData({ ...formData, is_pot_luck_style: e.target.checked })}
+              className="h-4 w-4 rounded border-input"
+            />
+            <Label htmlFor="is_pot_luck_style" className="text-sm font-normal cursor-pointer">
+              This is a pot luck style meal (guests bring dishes)
+            </Label>
           </div>
 
           <DialogFooter>
