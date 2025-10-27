@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Plus, Building2, DoorOpen, Users, Monitor, Link as LinkIcon } from "lucide-react";
+import { Plus, Clock, MapPin, Trash2, Pencil, Calendar, ChevronDown, Building2, DoorOpen, Monitor, Link as LinkIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AddScheduleDialog from "./AddScheduleDialog";
 import { formatFieldName, getSessionTypeLabel } from "@/lib/scheduleTemplates";

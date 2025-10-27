@@ -110,7 +110,7 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       setAllowAllGuestCategories(schedule.allow_all_guest_categories ?? true);
       setSessionMode(schedule.session_mode || 'in_person');
       setOnlineLink(schedule.online_link || "");
-    } else {
+    } else if (open) {
       setFormData({
         session_title: "",
         start_time: "",
@@ -128,7 +128,6 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       setSelectedGuestCategories([]);
       setSessionMode('in_person');
       setOnlineLink("");
-      });
     }
   }, [schedule, open, eventTypes, preselectedSessionType]);
 
@@ -192,6 +191,34 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.session_title.trim() || !formData.start_time || !formData.end_time) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate based on session mode
+    if (sessionMode === 'online' && !onlineLink.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Online link is required for online sessions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (sessionMode === 'in_person' && !formData.building_id) {
+      toast({
+        title: "Validation Error",
+        description: "Building/venue is required for in-person sessions.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!allowAllGuestCategories && selectedGuestCategories.length === 0) {
       toast({
         title: "Validation Error",
@@ -208,14 +235,7 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       .map(field => field.label);
 
     if (missingFields.length > 0) {
-    if (!formData.session_title.trim() || !formData.start_time || !formData.end_time) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
         title: "Missing Required Fields",
         description: `Please fill in: ${missingFields.join(', ')}`,
         variant: "destructive",
@@ -229,13 +249,15 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
       start_time: formData.start_time,
       end_time: formData.end_time,
       description: formData.description,
-      location: formData.location,
+      location: null, // No longer using this field
       session_type: formData.session_type,
       metadata: formData.metadata,
       event_id: eventId,
-      building_id: formData.building_id || null,
-      room_id: formData.room_id || null,
+      building_id: (sessionMode === 'in_person' || sessionMode === 'hybrid') ? formData.building_id || null : null,
+      room_id: (sessionMode === 'in_person' || sessionMode === 'hybrid') ? formData.room_id || null : null,
       allow_all_guest_categories: allowAllGuestCategories,
+      session_mode: sessionMode,
+      online_link: (sessionMode === 'online' || sessionMode === 'hybrid') ? onlineLink : null,
     };
 
     try {
@@ -326,10 +348,10 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                 })
               }
             >
-              <SelectTrigger id={field.name}>
+              <SelectTrigger id={field.name} className="bg-background">
                 <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover z-50">
                 {field.options?.map((option) => (
                   <SelectItem key={option} value={option}>
                     {option}
@@ -432,10 +454,10 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                   setFormData({ ...formData, session_type: value, metadata: {} })
                 }
               >
-                <SelectTrigger id="session_type">
+                <SelectTrigger id="session_type" className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
                   {eventTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {getEventTypeLabel(type)}
@@ -488,17 +510,6 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
               </div>
             </div>
 
-            {currentTemplate.commonFields.includes('location') && (
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                />
-              </div>
-            )}
-
             {currentTemplate.commonFields.includes('description') && (
               <div>
                 <Label htmlFor="description">Description</Label>
@@ -522,10 +533,10 @@ const AddScheduleDialog = ({ open, onOpenChange, eventId, eventTypes, schedule, 
                 value={sessionMode}
                 onValueChange={(value: any) => setSessionMode(value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
                   <SelectItem value="in_person">In-Person Only</SelectItem>
                   <SelectItem value="online">Online Only</SelectItem>
                   <SelectItem value="hybrid">Hybrid (In-Person + Online)</SelectItem>
