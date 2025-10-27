@@ -5,11 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateForInput } from "@/lib/utils";
-import { checkIsPotLuckEvent } from "@/lib/potLuckHelpers";
 
 interface AddPersonalFoodSessionDialogProps {
   open: boolean;
@@ -35,10 +33,8 @@ export const AddPersonalFoodSessionDialog = ({
     venue_name: "",
     estimated_attendees: "",
     notes: "",
-    is_pot_luck_style: false,
   });
   const [loading, setLoading] = useState(false);
-  const isPotLuckEvent = checkIsPotLuckEvent(event?.event_types || []);
 
   useEffect(() => {
     if (session) {
@@ -49,7 +45,6 @@ export const AddPersonalFoodSessionDialog = ({
         venue_name: session.venue_name || "",
         estimated_attendees: session.estimated_attendees?.toString() || "",
         notes: session.notes || "",
-        is_pot_luck_style: session.is_pot_luck_style || false,
       });
     } else if (open) {
       setFormData({
@@ -59,10 +54,9 @@ export const AddPersonalFoodSessionDialog = ({
         venue_name: "",
         estimated_attendees: "",
         notes: "",
-        is_pot_luck_style: isPotLuckEvent,
       });
     }
-  }, [session, open, isPotLuckEvent]);
+  }, [session, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +70,6 @@ export const AddPersonalFoodSessionDialog = ({
       venue_name: formData.venue_name || null,
       estimated_attendees: formData.estimated_attendees ? parseInt(formData.estimated_attendees) : null,
       notes: formData.notes || null,
-      is_pot_luck_style: formData.is_pot_luck_style,
     };
 
     try {
@@ -182,21 +175,6 @@ export const AddPersonalFoodSessionDialog = ({
               onChange={(e) => setFormData({ ...formData, estimated_attendees: e.target.value })}
             />
           </div>
-
-          {isPotLuckEvent && (
-            <div className="flex items-center space-x-2 p-3 rounded-lg border bg-muted/50">
-              <Checkbox
-                id="is_pot_luck_style"
-                checked={formData.is_pot_luck_style}
-                onCheckedChange={(checked) => 
-                  setFormData({ ...formData, is_pot_luck_style: checked as boolean })
-                }
-              />
-              <Label htmlFor="is_pot_luck_style" className="cursor-pointer">
-                This is a Pot Luck style session (guests bring food)
-              </Label>
-            </div>
-          )}
 
           <div>
             <Label htmlFor="notes">Notes</Label>
