@@ -7,17 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { personalEventTypes } from "@/lib/personalEventTypes";
 import { initializeDefaultPersonalConfiguration } from "@/lib/personalEventConfiguration";
+import { checkIsPotLuckEvent } from "@/lib/potLuckHelpers";
 
 const CreatePersonalEvent = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
-    event_types: [] as string[],
     event_date: "",
     event_time: "",
     location: "",
@@ -29,14 +32,16 @@ const CreatePersonalEvent = () => {
     max_accompanies_per_guest: "",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.event_types.length === 0) {
+  const handleNextStep = () => {
+    if (step === 1 && selectedTypes.length === 0) {
       toast.error("Please select at least one event type");
       return;
     }
+    setStep(2);
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
@@ -48,7 +53,7 @@ const CreatePersonalEvent = () => {
         .insert({
           user_id: user.id,
           name: formData.name,
-          event_types: formData.event_types,
+          event_types: selectedTypes,
           event_date: formData.event_date,
           event_time: formData.event_time,
           location: formData.location,
@@ -78,62 +83,83 @@ const CreatePersonalEvent = () => {
     }
   };
 
-  const toggleEventType = (type: string) => {
-    setFormData(prev => ({
-      ...prev,
-      event_types: prev.event_types.includes(type)
-        ? prev.event_types.filter(t => t !== type)
-        : [...prev.event_types, type]
-    }));
-  };
+  const isPotLuckSelected = checkIsPotLuckEvent(selectedTypes);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-3xl">
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/personal-events')}>
+        <Button variant="ghost" size="icon" onClick={() => step === 1 ? navigate('/personal-events') : setStep(1)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold">Create Personal Event</h1>
-          <p className="text-muted-foreground">Plan your celebration</p>
+          <p className="text-muted-foreground">
+            {step === 1 ? "Select event type(s)" : "Event details"}
+          </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Event Details</CardTitle>
-            <CardDescription>Fill in the basic information about your event</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Event Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Sarah's 30th Birthday Party"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Event Type(s) *</Label>
-              <div className="grid grid-cols-2 gap-3">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {step === 1 ? "Select Event Types" : "Event Details"}
+          </CardTitle>
+          <CardDescription>
+            {step === 1
+              ? "Choose one or more event types for your celebration"
+              : "Fill in the details for your personal event"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {step === 1 ? (
+            <div className="space-y-6">
+              <ToggleGroup
+                type="multiple"
+                value={selectedTypes}
+                onValueChange={setSelectedTypes}
+                className="flex flex-wrap gap-2 justify-start"
+              >
                 {personalEventTypes.map((type) => (
-                  <div key={type.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={type.value}
-                      checked={formData.event_types.includes(type.value)}
-                      onCheckedChange={() => toggleEventType(type.value)}
-                    />
-                    <Label htmlFor={type.value} className="cursor-pointer">
-                      {type.label}
-                    </Label>
-                  </div>
+                  <ToggleGroupItem
+                    key={type.value}
+                    value={type.value}
+                    className="px-4 py-2"
+                  >
+                    {type.label}
+                  </ToggleGroupItem>
                 ))}
-              </div>
+              </ToggleGroup>
+              
+              {isPotLuckSelected && (
+                <div className="p-4 rounded-lg bg-muted border">
+                  <p className="text-sm">
+                    🎉 <strong>Pot Luck selected!</strong> You'll be able to coordinate guest food contributions
+                    and track what everyone is bringing in the Food Planning tab.
+                  </p>
+                </div>
+              )}
+
+              <Button
+                onClick={handleNextStep}
+                className="w-full"
+                disabled={selectedTypes.length === 0}
+              >
+                Next
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Event Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g., Sarah's 30th Birthday Party"
+                  required
+                />
+              </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -246,17 +272,18 @@ const CreatePersonalEvent = () => {
               )}
             </div>
 
-            <div className="flex gap-2 justify-end">
-              <Button type="button" variant="outline" onClick={() => navigate('/personal-events')}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Creating..." : "Create Event"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Creating..." : "Create Event"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

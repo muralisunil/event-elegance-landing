@@ -10,6 +10,7 @@ import {
   initializeDefaultPersonalConfiguration,
   PersonalEventConfiguration 
 } from "@/lib/personalEventConfiguration";
+import { PersonalFoodPlanningTab } from "@/components/personal-event/PersonalFoodPlanningTab";
 
 const ManagePersonalEvent = () => {
   const { eventId } = useParams();
@@ -142,10 +143,7 @@ const ManagePersonalEvent = () => {
 
         {config.feature_food_planning_enabled && (
           <TabsContent value="food">
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold mb-4">Food Planning Tab</h2>
-              <p className="text-muted-foreground">Coming soon - Plan meals and assign to guests</p>
-            </div>
+            <PersonalFoodPlanningTab eventId={eventId!} event={event} />
           </TabsContent>
         )}
 

@@ -14,5 +14,6 @@ export const personalEventTypes = [
   { value: 'milestone_celebration', label: 'Milestone Celebration' },
   { value: 'private_dinner', label: 'Private Dinner Party' },
   { value: 'cocktail_party', label: 'Cocktail Party' },
+  { value: 'pot_luck', label: 'Pot Luck' },
   { value: 'other', label: 'Other / Custom' },
 ];
