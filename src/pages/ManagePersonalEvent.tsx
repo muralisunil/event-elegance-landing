@@ -11,6 +11,10 @@ import {
   PersonalEventConfiguration 
 } from "@/lib/personalEventConfiguration";
 import { PersonalFoodPlanningTab } from "@/components/personal-event/PersonalFoodPlanningTab";
+import PersonalOverviewTab from "@/components/personal-event/PersonalOverviewTab";
+import PersonalGuestsTab from "@/components/personal-event/PersonalGuestsTab";
+import PersonalVenuesTab from "@/components/personal-event/PersonalVenuesTab";
+import PersonalSettingsTab from "@/components/personal-event/PersonalSettingsTab";
 
 const ManagePersonalEvent = () => {
   const { eventId } = useParams();
@@ -123,18 +127,12 @@ const ManagePersonalEvent = () => {
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Overview Tab</h2>
-            <p className="text-muted-foreground">Coming soon - Event overview and dashboard</p>
-          </div>
+          <PersonalOverviewTab event={event} />
         </TabsContent>
 
         {config.feature_venues_enabled && (
           <TabsContent value="venues">
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold mb-4">Venues Tab</h2>
-              <p className="text-muted-foreground">Coming soon - Manage event venues</p>
-            </div>
+            <PersonalVenuesTab eventId={eventId!} />
           </TabsContent>
         )}
 
@@ -148,10 +146,7 @@ const ManagePersonalEvent = () => {
         )}
 
         <TabsContent value="guests">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Guests Tab</h2>
-            <p className="text-muted-foreground">Coming soon - Manage guest list</p>
-          </div>
+          <PersonalGuestsTab eventId={eventId!} event={event} />
         </TabsContent>
 
         {config.feature_food_planning_enabled && (
@@ -186,10 +181,7 @@ const ManagePersonalEvent = () => {
         </TabsContent>
 
         <TabsContent value="settings">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Settings Tab</h2>
-            <p className="text-muted-foreground">Coming soon - Event settings and configurations</p>
-          </div>
+          <PersonalSettingsTab />
         </TabsContent>
       </Tabs>
     </div>
