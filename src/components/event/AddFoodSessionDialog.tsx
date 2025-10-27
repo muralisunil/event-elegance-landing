@@ -367,14 +367,14 @@ export const AddFoodSessionDialog = ({ open, onOpenChange, eventId, event, sessi
                 <div>
                   <Label htmlFor="room_id">Room (Optional)</Label>
                   <Select
-                    value={formData.room_id}
-                    onValueChange={(value) => setFormData({ ...formData, room_id: value })}
+                    value={formData.room_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, room_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger id="room_id">
                       <SelectValue placeholder="Select room..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No specific room</SelectItem>
+                      <SelectItem value="none">No specific room</SelectItem>
                       {rooms
                         .filter((r) => r.building_id === formData.building_id)
                         .map((room) => (
