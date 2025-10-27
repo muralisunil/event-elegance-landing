@@ -168,16 +168,15 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
 
           {categories.length > 0 && (
             <div>
-              <Label htmlFor="category">Guest Category</Label>
+              <Label htmlFor="category">Guest Category (Optional)</Label>
               <Select
-                value={formData.guest_category_id}
+                value={formData.guest_category_id || undefined}
                 onValueChange={(value) => setFormData({ ...formData, guest_category_id: value })}
               >
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select category (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.category_name}
@@ -185,6 +184,17 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
                   ))}
                 </SelectContent>
               </Select>
+              {formData.guest_category_id && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1"
+                  onClick={() => setFormData({ ...formData, guest_category_id: "" })}
+                >
+                  Clear category
+                </Button>
+              )}
             </div>
           )}
 
