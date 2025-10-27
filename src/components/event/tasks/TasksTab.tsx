@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid, List } from "lucide-react";
+import { Plus, LayoutGrid, List, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TaskDialog } from "./TaskDialog";
 import { TaskBoard } from "./TaskBoard";
 import { TaskCard } from "./TaskCard";
+import { AISuggestionsDialog } from "./AISuggestionsDialog";
 import { useTaskPermissions } from "@/hooks/useTaskPermissions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Card } from "@/components/ui/card";
@@ -23,6 +24,7 @@ export const TasksTab = ({ eventId }: TasksTabProps) => {
   const [editingTask, setEditingTask] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<any>(null);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
   
   const { canManage, canView, loading: permLoading } = useTaskPermissions(eventId);
 
@@ -128,10 +130,16 @@ export const TasksTab = ({ eventId }: TasksTabProps) => {
             {viewMode === 'board' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
           </Button>
           {canManage && (
-            <Button onClick={() => { setEditingTask(null); setDialogOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Get AI Suggestions
+              </Button>
+              <Button onClick={() => { setEditingTask(null); setDialogOpen(true); }}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Task
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -196,6 +204,13 @@ export const TasksTab = ({ eventId }: TasksTabProps) => {
         onOpenChange={setDialogOpen}
         eventId={eventId}
         task={editingTask}
+        onSuccess={fetchTasks}
+      />
+
+      <AISuggestionsDialog
+        open={aiDialogOpen}
+        onOpenChange={setAiDialogOpen}
+        eventId={eventId}
         onSuccess={fetchTasks}
       />
 
