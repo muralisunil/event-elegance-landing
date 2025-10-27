@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -16,6 +16,13 @@ interface ManageEventTypesDialogProps {
 export const ManageEventTypesDialog = ({ open, onOpenChange, event, onSuccess }: ManageEventTypesDialogProps) => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(event.event_types || []);
   const [loading, setLoading] = useState(false);
+
+  // Sync state when event changes or dialog opens
+  useEffect(() => {
+    if (open && event) {
+      setSelectedTypes(event.event_types || []);
+    }
+  }, [open, event]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
