@@ -268,6 +268,7 @@ export type Database = {
           display_color: string | null
           event_id: string
           id: string
+          is_system_category: boolean | null
           max_guests: number | null
           updated_at: string
         }
@@ -279,6 +280,7 @@ export type Database = {
           display_color?: string | null
           event_id: string
           id?: string
+          is_system_category?: boolean | null
           max_guests?: number | null
           updated_at?: string
         }
@@ -290,6 +292,7 @@ export type Database = {
           display_color?: string | null
           event_id?: string
           id?: string
+          is_system_category?: boolean | null
           max_guests?: number | null
           updated_at?: string
         }
@@ -311,6 +314,8 @@ export type Database = {
           event_id: string
           guest_category_id: string | null
           id: string
+          internal_classification: string | null
+          internal_notes: string | null
           invitation_status: string | null
           name: string
           num_accompanies: number | null
@@ -326,6 +331,8 @@ export type Database = {
           event_id: string
           guest_category_id?: string | null
           id?: string
+          internal_classification?: string | null
+          internal_notes?: string | null
           invitation_status?: string | null
           name: string
           num_accompanies?: number | null
@@ -341,6 +348,8 @@ export type Database = {
           event_id?: string
           guest_category_id?: string | null
           id?: string
+          internal_classification?: string | null
+          internal_notes?: string | null
           invitation_status?: string | null
           name?: string
           num_accompanies?: number | null

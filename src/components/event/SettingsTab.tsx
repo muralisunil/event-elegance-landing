@@ -7,42 +7,38 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Settings, Rocket, Image as ImageIcon, Shield } from "lucide-react";
-import { getEventConfiguration, updateEventConfiguration } from "@/lib/eventConfiguration";
+import { getEventConfiguration, updateEventConfiguration, ensureVolunteerCategory } from "@/lib/eventConfiguration";
 import { PublishEventDialog } from "./PublishEventDialog";
 import { InvitationUpload } from "./InvitationUpload";
 
 interface SettingsTabProps {
   event: any;
+  config: any;
+  onConfigUpdate: (newConfig: any) => void;
   onUpdate: () => void;
 }
 
-const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
-  const [config, setConfig] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+const SettingsTab = ({ event, config, onConfigUpdate, onUpdate }: SettingsTabProps) => {
+  const [loading, setLoading] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
-
-  useEffect(() => {
-    fetchConfig();
-  }, [event.id]);
-
-  const fetchConfig = async () => {
-    setLoading(true);
-    const configuration = await getEventConfiguration(event.id);
-    setConfig(configuration);
-    setLoading(false);
-  };
 
   const handleFeatureToggle = async (feature: string, enabled: boolean) => {
     if (!config) return;
 
+    setLoading(true);
     try {
-      await updateEventConfiguration(event.id, { [feature]: enabled });
+      const updatedConfig = await updateEventConfiguration(event.id, { [feature]: enabled });
+      
+      // Handle Volunteer category management
+      if (feature === "feature_volunteers_enabled") {
+        await ensureVolunteerCategory(event.id, enabled);
+      }
+      
+      onConfigUpdate(updatedConfig);
       toast({
         title: "Updated",
         description: `Feature ${enabled ? "enabled" : "disabled"} successfully.`,
       });
-      await fetchConfig();
-      onUpdate();
     } catch (error) {
       toast({
         title: "Error",
@@ -50,13 +46,17 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
         variant: "destructive",
       });
     }
+    setLoading(false);
   };
 
   const handleInvitationUpload = async (url: string) => {
     try {
-      await updateEventConfiguration(event.id, { invitation_image_url: url });
-      await fetchConfig();
-      onUpdate();
+      const updatedConfig = await updateEventConfiguration(event.id, { invitation_image_url: url });
+      onConfigUpdate(updatedConfig);
+      toast({
+        title: "Success",
+        description: "Invitation image updated.",
+      });
     } catch (error) {
       toast({
         title: "Error",
@@ -65,17 +65,6 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
       });
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Loading settings...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!config) {
     return (
@@ -113,6 +102,7 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
                 id="feature-volunteers"
                 checked={config.feature_volunteers_enabled}
                 onCheckedChange={(checked) => handleFeatureToggle("feature_volunteers_enabled", checked)}
+                disabled={loading}
               />
             </div>
 
@@ -314,8 +304,7 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
         onOpenChange={setPublishDialogOpen}
         eventId={event.id}
         onSuccess={() => {
-          fetchConfig();
-          onUpdate();
+          onUpdate(); // Full refresh for publishing
         }}
       />
     </div>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Trash2, Pencil, Lock, Filter } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import AddGuestDialog from "./AddGuestDialog";
 import {
@@ -31,14 +32,28 @@ interface GuestsTabProps {
 
 const GuestsTab = ({ eventId, event }: GuestsTabProps) => {
   const [guests, setGuests] = useState<any[]>([]);
+  const [filteredGuests, setFilteredGuests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [filterTag, setFilterTag] = useState("");
 
   useEffect(() => {
     fetchGuests();
   }, [eventId]);
+
+  useEffect(() => {
+    // Filter guests by internal tag
+    if (filterTag) {
+      const filtered = guests.filter(g => 
+        g.internal_classification?.toLowerCase().includes(filterTag.toLowerCase())
+      );
+      setFilteredGuests(filtered);
+    } else {
+      setFilteredGuests(guests);
+    }
+  }, [filterTag, guests]);
 
   const fetchGuests = async () => {
     setLoading(true);
@@ -100,25 +115,40 @@ const GuestsTab = ({ eventId, event }: GuestsTabProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
+      <div className="flex justify-between items-center gap-4">
+        <div className="flex-1">
           <h2 className="text-2xl font-bold">Guest List</h2>
           <p className="text-sm text-muted-foreground">
-            {guests.length} / {event.is_unlimited_guests ? "Unlimited" : event.max_guests} guests
+            {filteredGuests.length} {filterTag && `(${guests.length} total)`} / {event.is_unlimited_guests ? "Unlimited" : event.max_guests} guests
           </p>
         </div>
-        <Button onClick={() => { setEditingGuest(null); setDialogOpen(true); }}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Guest
-        </Button>
+        <div className="flex gap-2">
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Filter by internal tag..."
+              value={filterTag}
+              onChange={(e) => setFilterTag(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+          <Button onClick={() => { setEditingGuest(null); setDialogOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Guest
+          </Button>
+        </div>
       </div>
 
-      {guests.length === 0 ? (
+      {filteredGuests.length === 0 ? (
         <div className="text-center py-12 border rounded-lg">
-          <p className="text-muted-foreground mb-4">No guests added yet</p>
-          <Button variant="outline" onClick={() => setDialogOpen(true)}>
-            Add First Guest
-          </Button>
+          <p className="text-muted-foreground mb-4">
+            {filterTag ? "No guests match this filter" : "No guests added yet"}
+          </p>
+          {!filterTag && (
+            <Button variant="outline" onClick={() => setDialogOpen(true)}>
+              Add First Guest
+            </Button>
+          )}
         </div>
       ) : (
         <div className="border rounded-lg">
@@ -129,13 +159,14 @@ const GuestsTab = ({ eventId, event }: GuestsTabProps) => {
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Internal Tags</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Accompanies</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {guests.map((guest) => (
+              {filteredGuests.map((guest) => (
                 <TableRow key={guest.id}>
                   <TableCell className="font-medium">{guest.name}</TableCell>
                   <TableCell>{guest.email}</TableCell>
@@ -145,6 +176,20 @@ const GuestsTab = ({ eventId, event }: GuestsTabProps) => {
                       <Badge style={{ backgroundColor: guest.guest_category.display_color }}>
                         {guest.guest_category.category_name}
                       </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {guest.internal_classification ? (
+                      <div className="flex flex-wrap gap-1">
+                        {guest.internal_classification.split(",").map((tag: string, idx: number) => (
+                          <Badge key={idx} variant="secondary" className="gap-1 text-xs">
+                            <Lock className="h-2 w-2" />
+                            {tag.trim()}
+                          </Badge>
+                        ))}
+                      </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}

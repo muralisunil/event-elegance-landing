@@ -110,6 +110,7 @@ const AddVolunteerDialog = ({ eventId, open, onClose, volunteer }: AddVolunteerD
     };
 
     if (volunteer) {
+      // Update existing volunteer
       const { error } = await supabase
         .from("event_volunteers")
         .update(volunteerData)
@@ -122,6 +123,9 @@ const AddVolunteerDialog = ({ eventId, open, onClose, volunteer }: AddVolunteerD
           variant: "destructive",
         });
       } else {
+        // Update corresponding guest record if exists
+        await updateGuestRecord(formData.email);
+        
         toast({
           title: "Success",
           description: "Volunteer updated successfully.",
@@ -129,6 +133,7 @@ const AddVolunteerDialog = ({ eventId, open, onClose, volunteer }: AddVolunteerD
         onClose();
       }
     } else {
+      // Insert new volunteer
       const { error } = await supabase.from("event_volunteers").insert(volunteerData);
 
       if (error) {
@@ -138,12 +143,66 @@ const AddVolunteerDialog = ({ eventId, open, onClose, volunteer }: AddVolunteerD
           variant: "destructive",
         });
       } else {
+        // Add volunteer to guest list
+        await addVolunteerToGuestList(volunteerData);
+        
         toast({
           title: "Success",
-          description: "Volunteer added successfully.",
+          description: "Volunteer added successfully and added to guest list.",
         });
         onClose();
       }
+    }
+  };
+
+  const addVolunteerToGuestList = async (volunteerData: any) => {
+    // Get Volunteer category
+    const { data: category } = await supabase
+      .from("event_guest_categories")
+      .select("id")
+      .eq("event_id", eventId)
+      .eq("category_name", "Volunteer")
+      .eq("is_system_category", true)
+      .maybeSingle();
+
+    if (category) {
+      // Check if guest already exists
+      const { data: existingGuest } = await supabase
+        .from("event_guests")
+        .select("id")
+        .eq("event_id", eventId)
+        .eq("email", volunteerData.email)
+        .maybeSingle();
+
+      if (!existingGuest) {
+        // Insert guest
+        await supabase.from("event_guests").insert({
+          event_id: eventId,
+          name: volunteerData.name,
+          email: volunteerData.email,
+          phone: volunteerData.phone,
+          guest_category_id: category.id,
+          invitation_status: "pending",
+          internal_classification: "Volunteer Staff",
+        });
+      }
+    }
+  };
+
+  const updateGuestRecord = async (email: string) => {
+    // Find and update guest by email
+    const { data: guest } = await supabase
+      .from("event_guests")
+      .select("id")
+      .eq("event_id", eventId)
+      .eq("email", email)
+      .maybeSingle();
+
+    if (guest) {
+      await supabase.from("event_guests").update({
+        name: formData.name.trim(),
+        phone: formData.phone.trim() || null,
+      }).eq("id", guest.id);
     }
   };
 

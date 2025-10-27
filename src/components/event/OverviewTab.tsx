@@ -15,6 +15,8 @@ import { ManageEventTypesDialog } from "./ManageEventTypesDialog";
 import { GuestCategoryManager } from "./GuestCategoryManager";
 import { getEventConfiguration } from "@/lib/eventConfiguration";
 
+import { GuestStatsDashboard } from "./GuestStatsDashboard";
+
 interface OverviewTabProps {
   event: any;
 }
@@ -182,6 +184,13 @@ const OverviewTab = ({ event }: OverviewTabProps) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Guest Statistics Dashboard */}
+      <GuestStatsDashboard 
+        eventId={event.id}
+        maxGuests={event.max_guests}
+        isUnlimited={event.is_unlimited_guests}
+      />
 
       {/* Key Statistics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

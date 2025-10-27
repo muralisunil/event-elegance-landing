@@ -60,6 +60,10 @@ const ManageEvent = () => {
     setLoading(false);
   };
 
+  const handleConfigUpdate = (newConfig: any) => {
+    setConfig(newConfig);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -147,7 +151,7 @@ const ManageEvent = () => {
           )}
 
           <TabsContent value="settings">
-            <SettingsTab event={event} onUpdate={fetchEvent} />
+            <SettingsTab event={event} config={config} onConfigUpdate={handleConfigUpdate} onUpdate={fetchEvent} />
           </TabsContent>
         </Tabs>
       </div>

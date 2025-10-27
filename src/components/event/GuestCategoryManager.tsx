@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Lock } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +32,7 @@ interface GuestCategory {
   benefits: string | null;
   max_guests: number | null;
   display_color: string;
+  is_system_category: boolean;
 }
 
 interface GuestCategoryManagerProps {
@@ -81,6 +87,18 @@ export const GuestCategoryManager = ({ open, onOpenChange, eventId, onSuccess }:
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    // Check if it's a system category
+    const category = categories.find(c => c.id === deleteId);
+    if (category?.is_system_category) {
+      toast({
+        title: "Cannot Delete",
+        description: "System categories cannot be deleted manually.",
+        variant: "destructive",
+      });
+      setDeleteId(null);
+      return;
+    }
+
     const { error } = await supabase
       .from("event_guest_categories")
       .delete()
@@ -117,52 +135,74 @@ export const GuestCategoryManager = ({ open, onOpenChange, eventId, onSuccess }:
             </Button>
 
             {categories.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center text-muted-foreground">
-                  <Users className="mx-auto h-12 w-12 mb-2 opacity-50" />
-                  <p>No guest categories yet. Add your first category to organize guests.</p>
-                </CardContent>
-              </Card>
+              <div className="p-6 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+                <Users className="mx-auto h-12 w-12 mb-2 opacity-50" />
+                <p>No guest categories yet. Add your first category to organize guests.</p>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <Accordion type="multiple" className="w-full">
                 {categories.map((category) => (
-                  <Card key={category.id}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge style={{ backgroundColor: category.display_color }}>
-                            {category.category_name}
+                  <AccordionItem key={category.id} value={category.id}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-2 flex-1">
+                        <Badge style={{ backgroundColor: category.display_color }}>
+                          {category.category_name}
+                        </Badge>
+                        {category.is_system_category && (
+                          <Badge variant="outline" className="gap-1">
+                            <Lock className="h-3 w-3" />
+                            System
                           </Badge>
-                          {category.max_guests && (
-                            <span className="text-sm text-muted-foreground">
-                              Max: {category.max_guests} guests
-                            </span>
-                          )}
-                        </div>
-                        {category.benefits && (
-                          <p className="text-sm text-muted-foreground">{category.benefits}</p>
+                        )}
+                        {category.max_guests && (
+                          <span className="text-xs text-muted-foreground">
+                            Max: {category.max_guests}
+                          </span>
                         )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(category)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setDeleteId(category.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3 pt-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Priority Level</p>
+                          <p className="text-sm font-medium">{category.category_level}</p>
+                        </div>
+                        {category.benefits && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Benefits</p>
+                            <p className="text-sm">{category.benefits}</p>
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(category)}
+                            disabled={category.is_system_category}
+                          >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeleteId(category.id)}
+                            disabled={category.is_system_category}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                        {category.is_system_category && (
+                          <p className="text-xs text-muted-foreground">
+                            System categories are managed automatically and cannot be edited or deleted.
+                          </p>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             )}
           </div>
         </DialogContent>
@@ -239,6 +279,17 @@ const AddCategoryDialog = ({ open, onOpenChange, eventId, category, onSuccess }:
     e.preventDefault();
     setLoading(true);
 
+    // Prevent manual creation of "Volunteer" category
+    if (formData.category_name.toLowerCase() === "volunteer" && !category) {
+      toast({
+        title: "Cannot Create",
+        description: "The 'Volunteer' category is system-managed. Enable volunteer management in Settings to create it automatically.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     const payload = {
       event_id: eventId,
       category_name: formData.category_name,
@@ -246,6 +297,7 @@ const AddCategoryDialog = ({ open, onOpenChange, eventId, category, onSuccess }:
       benefits: formData.benefits || null,
       max_guests: formData.max_guests ? parseInt(formData.max_guests) : null,
       display_color: formData.display_color,
+      is_system_category: false,
     };
 
     if (category) {

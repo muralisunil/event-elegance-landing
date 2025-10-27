@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+import { InternalTagsInput } from "./InternalTagsInput";
+
 interface AddGuestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +29,8 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
     special_requirements: "",
     num_accompanies: 0,
     guest_category_id: "",
+    internal_classification: "",
+    internal_notes: "",
   });
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,6 +48,8 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
           special_requirements: guest.special_requirements || "",
           num_accompanies: guest.num_accompanies || 0,
           guest_category_id: guest.guest_category_id || "",
+          internal_classification: guest.internal_classification || "",
+          internal_notes: guest.internal_notes || "",
         });
       } else {
         setFormData({
@@ -55,6 +61,8 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
           special_requirements: "",
           num_accompanies: 0,
           guest_category_id: "",
+          internal_classification: "",
+          internal_notes: "",
         });
       }
     }
@@ -212,6 +220,23 @@ const AddGuestDialog = ({ open, onOpenChange, eventId, guest, event, onSuccess }
               onChange={(e) => setFormData({ ...formData, special_requirements: e.target.value })}
               rows={2}
             />
+          </div>
+
+          <InternalTagsInput
+            value={formData.internal_classification}
+            onChange={(value) => setFormData({ ...formData, internal_classification: value })}
+          />
+
+          <div>
+            <Label htmlFor="internal_notes">Internal Notes</Label>
+            <Textarea
+              id="internal_notes"
+              value={formData.internal_notes}
+              onChange={(e) => setFormData({ ...formData, internal_notes: e.target.value })}
+              placeholder="Private notes for organizers only"
+              rows={2}
+            />
+            <p className="text-xs text-muted-foreground mt-1">These notes are only visible to event organizers</p>
           </div>
 
           <div className="flex justify-end gap-2">
