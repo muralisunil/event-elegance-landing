@@ -61,6 +61,20 @@ const ManageEvent = () => {
     setLoading(false);
   };
 
+  const refreshEventData = async () => {
+    if (!eventId) return;
+    
+    const { data } = await supabase
+      .from('outreach_events')
+      .select('*')
+      .eq('id', eventId)
+      .single();
+
+    if (data) {
+      setEvent(data);
+    }
+  };
+
   const handleConfigUpdate = (newConfig: any) => {
     setConfig(newConfig);
   };
@@ -115,7 +129,7 @@ const ManageEvent = () => {
           </TabsList>
 
           <TabsContent value="overview">
-            <OverviewTab event={event} onUpdate={fetchEvent} />
+            <OverviewTab event={event} onUpdate={refreshEventData} />
           </TabsContent>
 
           <TabsContent value="venues">
@@ -159,7 +173,7 @@ const ManageEvent = () => {
           )}
 
           <TabsContent value="settings">
-            <SettingsTab event={event} config={config} onConfigUpdate={handleConfigUpdate} onUpdate={fetchEvent} />
+            <SettingsTab event={event} config={config} onConfigUpdate={handleConfigUpdate} onUpdate={refreshEventData} />
           </TabsContent>
         </Tabs>
       </div>
