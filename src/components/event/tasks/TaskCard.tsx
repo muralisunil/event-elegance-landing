@@ -1,12 +1,16 @@
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Pencil, Trash2, Calendar, Clock, User, MessageSquare, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, MessageSquare, Clock, Edit, Trash2, CheckCircle2, Circle, Users } from "lucide-react";
-import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
+import { TaskDetailsDialog } from "./TaskDetailsDialog";
+import { StatusChangeDialog } from "./StatusChangeDialog";
+import { toast } from "@/hooks/use-toast";
 
 interface TaskCardProps {
   task: any;
@@ -16,160 +20,326 @@ interface TaskCardProps {
   canManage: boolean;
 }
 
-const priorityColors = {
-  low: "bg-blue-500/10 text-blue-700 border-blue-200",
-  medium: "bg-yellow-500/10 text-yellow-700 border-yellow-200",
-  high: "bg-orange-500/10 text-orange-700 border-orange-200",
-  urgent: "bg-red-500/10 text-red-700 border-red-200",
+const priorityColors: Record<string, string> = {
+  low: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
-const statusColors = {
-  not_started: "bg-gray-500/10 text-gray-700",
-  in_progress: "bg-blue-500/10 text-blue-700",
-  completed: "bg-green-500/10 text-green-700",
-  blocked: "bg-red-500/10 text-red-700",
-  cancelled: "bg-gray-500/10 text-gray-700",
+const statusColors: Record<string, string> = {
+  not_started: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+  in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  blocked: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  cancelled: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
 };
 
 export const TaskCard = ({ task, onEdit, onDelete, onStatusChange, canManage }: TaskCardProps) => {
   const [assignedVolunteers, setAssignedVolunteers] = useState<any[]>([]);
+  const [calculatedDueDate, setCalculatedDueDate] = useState<Date | null>(null);
+  const [commentCount, setCommentCount] = useState(0);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [statusDialogType, setStatusDialogType] = useState<"blocked" | "complete" | null>(null);
 
   useEffect(() => {
     fetchAssignments();
+    fetchCommentCount();
+    if (task.due_date_type !== "fixed_datetime") {
+      calculateDueDate();
+    }
   }, [task.id]);
 
   const fetchAssignments = async () => {
-    const { data } = await supabase
-      .from('event_task_assignments')
-      .select(`
-        user_id,
-        event_volunteers!inner(id, name, email, role)
-      `)
-      .eq('task_id', task.id);
-    
-    if (data) {
-      setAssignedVolunteers(data.map(a => (a as any).event_volunteers));
+    try {
+      const { data: assignments } = await supabase
+        .from("event_task_assignments")
+        .select("user_id")
+        .eq("task_id", task.id);
+
+      if (assignments && assignments.length > 0) {
+        const userIds = assignments.map((a) => a.user_id);
+        const { data: volunteers } = await supabase
+          .from("event_volunteers")
+          .select("*")
+          .in("id", userIds);
+
+        setAssignedVolunteers(volunteers || []);
+      }
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
     }
   };
 
-  const calculateDueDate = () => {
-    if (task.due_date_type === 'fixed_datetime' && task.due_date) {
-      return new Date(task.due_date);
+  const fetchCommentCount = async () => {
+    try {
+      const { count } = await supabase
+        .from("event_task_comments")
+        .select("*", { count: "exact", head: true })
+        .eq("task_id", task.id);
+
+      setCommentCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching comment count:", error);
     }
-    // For relative dates, we'd need to call the DB function
-    return null;
   };
 
-  const dueDate = calculateDueDate();
-  const isOverdue = dueDate && dueDate < new Date() && task.status !== 'completed';
+  const calculateDueDate = async () => {
+    try {
+      const { data, error } = await supabase.rpc("calculate_task_due_date", {
+        _task: task,
+      });
+
+      if (error) throw error;
+      if (data) {
+        setCalculatedDueDate(new Date(data));
+      }
+    } catch (error) {
+      console.error("Error calculating due date:", error);
+    }
+  };
+
+  const handleStatusChangeClick = (newStatus: string) => {
+    if (newStatus === "blocked") {
+      setStatusDialogType("blocked");
+      setStatusDialogOpen(true);
+    } else if (newStatus === "completed" && task.status !== "completed") {
+      setStatusDialogType("complete");
+      setStatusDialogOpen(true);
+    } else {
+      onStatusChange?.(newStatus);
+    }
+  };
+
+  const handleStatusDialogConfirm = async (data: { reason?: string; actualHours?: number }) => {
+    if (statusDialogType === "blocked" && data.reason) {
+      // Add blocker reason as a system comment
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("event_task_comments").insert({
+            task_id: task.id,
+            user_id: user.id,
+            comment: `Task blocked: ${data.reason}`,
+            is_system_message: true,
+          });
+        }
+      } catch (error) {
+        console.error("Error adding blocker comment:", error);
+      }
+      onStatusChange?.("blocked");
+    } else if (statusDialogType === "complete") {
+      // Update actual hours if provided
+      if (data.actualHours) {
+        try {
+          await supabase
+            .from("event_tasks")
+            .update({ actual_hours: data.actualHours })
+            .eq("id", task.id);
+        } catch (error) {
+          console.error("Error updating actual hours:", error);
+        }
+      }
+      onStatusChange?.("completed");
+    }
+  };
+
+  const getDisplayDueDate = () => {
+    const dueDate = calculatedDueDate || (task.due_date ? new Date(task.due_date) : null);
+    if (!dueDate) return null;
+
+    const now = new Date();
+    const isOverdue = dueDate < now && task.status !== "completed";
+    const distance = formatDistanceToNow(dueDate, { addSuffix: true });
+
+    return { dueDate, isOverdue, distance };
+  };
+
+  const dueDateInfo = getDisplayDueDate();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
   return (
-    <TooltipProvider>
-      <Card className={`p-4 ${isOverdue ? 'border-red-300 bg-red-50/50' : ''}`}>
-        <div className="space-y-3">
+    <>
+      <Card 
+        className="hover:shadow-md transition-shadow cursor-pointer"
+        onClick={() => setDetailsOpen(true)}
+      >
+        <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <Badge className={priorityColors[task.priority as keyof typeof priorityColors]}>
-                  {task.priority.toUpperCase()}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <Badge className={priorityColors[task.priority]}>
+                  {task.priority}
+                </Badge>
+                <Badge className={statusColors[task.status]}>
+                  {task.status.replace(/_/g, " ")}
                 </Badge>
                 {task.is_ai_suggested && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="outline" className="text-xs cursor-help">
-                        🤖 AI Suggested
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p className="text-sm">{task.ai_suggestion_reason || 'Suggested by AI based on event analysis'}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge variant="secondary" className="cursor-help">
+                          🤖 AI Suggested
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">{task.ai_suggestion_reason || "Suggested by AI analysis"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {commentCount > 0 && (
+                  <Badge variant="outline" className="gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    {commentCount}
+                  </Badge>
                 )}
               </div>
-            <h4 className="font-medium text-lg">{task.title}</h4>
-            {task.description && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+              <CardTitle className="text-base font-semibold break-words">
+                {task.title}
+              </CardTitle>
+            </div>
+
+            {canManage && (
+              <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit?.();
+                  }}
+                  className="h-8 w-8"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete?.();
+                  }}
+                  className="h-8 w-8"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
-          {canManage && (
-            <div className="flex gap-1">
-              <Button size="icon" variant="ghost" onClick={onEdit}>
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={onDelete}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+        </CardHeader>
 
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+        <CardContent className="space-y-3">
+          {task.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {task.description}
+            </p>
+          )}
+
           {assignedVolunteers.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
               <div className="flex -space-x-2">
                 {assignedVolunteers.slice(0, 3).map((volunteer) => (
-                  <Tooltip key={volunteer.id}>
-                    <TooltipTrigger asChild>
-                      <Avatar className="h-6 w-6 border-2 border-background">
-                        <AvatarFallback className="text-xs">
-                          {volunteer.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{volunteer.name}</p>
-                      {volunteer.role && <p className="text-xs text-muted-foreground">{volunteer.role}</p>}
-                    </TooltipContent>
-                  </Tooltip>
+                  <TooltipProvider key={volunteer.id}>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Avatar className="h-6 w-6 border-2 border-background">
+                          <AvatarFallback className="text-xs">
+                            {getInitials(volunteer.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-sm font-medium">{volunteer.name}</p>
+                        {volunteer.role && (
+                          <p className="text-xs text-muted-foreground">{volunteer.role}</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
                 {assignedVolunteers.length > 3 && (
                   <Avatar className="h-6 w-6 border-2 border-background">
-                    <AvatarFallback className="text-xs">+{assignedVolunteers.length - 3}</AvatarFallback>
+                    <AvatarFallback className="text-xs">
+                      +{assignedVolunteers.length - 3}
+                    </AvatarFallback>
                   </Avatar>
                 )}
               </div>
             </div>
           )}
-          {dueDate && (
-            <div className={`flex items-center gap-1 ${isOverdue ? 'text-red-600 font-medium' : ''}`}>
-              <Calendar className="h-4 w-4" />
-              <span>{format(dueDate, 'MMM d, yyyy h:mm a')}</span>
-              {isOverdue && <span className="text-xs">(Overdue)</span>}
-            </div>
-          )}
+
           {task.estimated_hours && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>{task.estimated_hours}h estimated</span>
+              {task.actual_hours && (
+                <span className="text-xs">
+                  ({task.actual_hours}h actual)
+                </span>
+              )}
             </div>
           )}
-          {task.category && (
-            <Badge variant="outline" className="text-xs">
-              {task.category}
-            </Badge>
-          )}
-        </div>
 
-        <div className="flex items-center justify-between pt-2 border-t">
-          <Badge className={statusColors[task.status as keyof typeof statusColors]}>
-            {task.status.replace('_', ' ').toUpperCase()}
-          </Badge>
-          
-          {canManage && task.status !== 'completed' && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onStatusChange?.('completed')}
-              className="h-8"
-            >
-              <CheckCircle2 className="h-4 w-4 mr-1" />
-              Mark Complete
-            </Button>
+          {dueDateInfo && (
+            <div className="flex items-center gap-1 text-sm">
+              <Calendar className="h-4 w-4" />
+              <span className={dueDateInfo.isOverdue ? "text-red-600 font-medium" : "text-muted-foreground"}>
+                {dueDateInfo.isOverdue && (
+                  <AlertTriangle className="h-3 w-3 inline mr-1" />
+                )}
+                {dueDateInfo.dueDate.toLocaleDateString()} ({dueDateInfo.distance})
+              </span>
+            </div>
           )}
-        </div>
-        </div>
+        </CardContent>
+
+        {canManage && (
+          <CardContent className="pt-0" onClick={(e) => e.stopPropagation()}>
+            <Select
+              value={task.status}
+              onValueChange={handleStatusChangeClick}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_started">Not Started</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        )}
       </Card>
-    </TooltipProvider>
+
+      <TaskDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        task={task}
+        onUpdate={() => {
+          fetchCommentCount();
+        }}
+      />
+
+      <StatusChangeDialog
+        open={statusDialogOpen}
+        onOpenChange={setStatusDialogOpen}
+        type={statusDialogType}
+        onConfirm={handleStatusDialogConfirm}
+      />
+    </>
   );
 };

@@ -5,9 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DueDateSelector } from "./DueDateSelector";
+import { Calendar as CalendarIcon, Plus, X } from "lucide-react";
+import { format } from "date-fns";
 
 interface TaskDialogProps {
   open: boolean;
@@ -23,6 +28,8 @@ export const TaskDialog = ({ open, onOpenChange, eventId, task, onSuccess }: Tas
   const [foodSessions, setFoodSessions] = useState<any[]>([]);
   const [volunteers, setVolunteers] = useState<any[]>([]);
   const [assignedVolunteers, setAssignedVolunteers] = useState<string[]>([]);
+  const [enableReminders, setEnableReminders] = useState(false);
+  const [reminders, setReminders] = useState<{ date: Date; time: string }[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -56,8 +63,11 @@ export const TaskDialog = ({ open, onOpenChange, eventId, task, onSuccess }: Tas
           relative_to_food_session_id: task.relative_to_food_session_id || '',
         });
         fetchTaskAssignments(task.id);
+        fetchTaskReminders(task.id);
       } else {
         setAssignedVolunteers([]);
+        setReminders([]);
+        setEnableReminders(false);
       }
     }
   }, [open, task]);
@@ -98,6 +108,28 @@ export const TaskDialog = ({ open, onOpenChange, eventId, task, onSuccess }: Tas
     
     if (data) {
       setAssignedVolunteers(data.map(a => a.user_id));
+    }
+  };
+
+  const fetchTaskReminders = async (taskId: string) => {
+    try {
+      const { data } = await supabase
+        .from("event_task_reminders")
+        .select("*")
+        .eq("task_id", taskId);
+      
+      if (data && data.length > 0) {
+        setEnableReminders(true);
+        setReminders(data.map(r => {
+          const date = new Date(r.remind_at);
+          return {
+            date,
+            time: format(date, "HH:mm"),
+          };
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching task reminders:", error);
     }
   };
 
@@ -164,6 +196,40 @@ export const TaskDialog = ({ open, onOpenChange, eventId, task, onSuccess }: Tas
             .insert(assignments);
           
           if (assignError) console.error('Error assigning volunteers:', assignError);
+        }
+
+        // Handle reminders
+        if (enableReminders && reminders.length > 0) {
+          // Delete old reminders if editing
+          if (task) {
+            await supabase
+              .from("event_task_reminders")
+              .delete()
+              .eq("task_id", taskId);
+          }
+
+          // Insert new reminders
+          const reminderInserts = reminders.map(r => {
+            const [hours, minutes] = r.time.split(":");
+            const reminderDate = new Date(r.date);
+            reminderDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            
+            return {
+              task_id: taskId,
+              remind_at: reminderDate.toISOString(),
+              reminder_type: "email",
+            };
+          });
+
+          await supabase
+            .from("event_task_reminders")
+            .insert(reminderInserts);
+        } else if (task) {
+          // Remove all reminders if disabled
+          await supabase
+            .from("event_task_reminders")
+            .delete()
+            .eq("task_id", taskId);
         }
       }
 
@@ -287,6 +353,78 @@ export const TaskDialog = ({ open, onOpenChange, eventId, task, onSuccess }: Tas
             foodSessions={foodSessions}
             onChange={(field, value) => setFormData({ ...formData, [field]: value })}
           />
+
+          {/* Reminders */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="enable-reminders">Set Reminders</Label>
+              <Switch
+                id="enable-reminders"
+                checked={enableReminders}
+                onCheckedChange={setEnableReminders}
+              />
+            </div>
+
+            {enableReminders && (
+              <div className="space-y-3 pl-4 border-l-2">
+                {reminders.map((reminder, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="flex-1 justify-start">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {reminder.date ? format(reminder.date, "PPP") : "Pick date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={reminder.date}
+                          onSelect={(date) => {
+                            if (date) {
+                              const newReminders = [...reminders];
+                              newReminders[index].date = date;
+                              setReminders(newReminders);
+                            }
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      type="time"
+                      value={reminder.time}
+                      onChange={(e) => {
+                        const newReminders = [...reminders];
+                        newReminders[index].time = e.target.value;
+                        setReminders(newReminders);
+                      }}
+                      className="w-32"
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        setReminders(reminders.filter((_, i) => i !== index));
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setReminders([...reminders, { date: new Date(), time: "09:00" }]);
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Reminder
+                </Button>
+              </div>
+            )}
+          </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

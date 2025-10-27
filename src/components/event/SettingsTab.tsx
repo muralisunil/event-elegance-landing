@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Settings, Rocket, Image as ImageIcon, Shield } from "lucide-react";
+import { Settings, Rocket, Shield, Sparkles } from "lucide-react";
 import { getEventConfiguration, updateEventConfiguration, ensureVolunteerCategory } from "@/lib/eventConfiguration";
 import { PublishEventDialog } from "./PublishEventDialog";
 import { InvitationUpload } from "./InvitationUpload";
@@ -21,6 +22,48 @@ interface SettingsTabProps {
 const SettingsTab = ({ event, config, onConfigUpdate, onUpdate }: SettingsTabProps) => {
   const [loading, setLoading] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [aiConfig, setAiConfig] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    if (event?.id) {
+      fetchAIConfig();
+    }
+  }, [event?.id]);
+
+  const fetchAIConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("event_task_ai_config")
+        .select("*")
+        .eq("event_id", event.id)
+        .maybeSingle();
+
+      if (error && error.code !== "PGRST116") throw error;
+      
+      if (data) {
+        setAiConfig(data);
+      } else {
+        // Create default config
+        const { data: newConfig, error: insertError } = await supabase
+          .from("event_task_ai_config")
+          .insert({
+            event_id: event.id,
+            ai_monitoring_enabled: false,
+            auto_suggest_tasks: false,
+            auto_create_tasks: false,
+            analysis_frequency_hours: 24,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        setAiConfig(newConfig);
+      }
+    } catch (error) {
+      console.error("Error fetching AI config:", error);
+    }
+  };
 
   const handleFeatureToggle = async (feature: string, enabled: boolean) => {
     if (!config) return;
@@ -64,6 +107,34 @@ const SettingsTab = ({ event, config, onConfigUpdate, onUpdate }: SettingsTabPro
         variant: "destructive",
       });
     }
+  };
+
+  const handleAIConfigUpdate = async (updates: Partial<typeof aiConfig>) => {
+    if (!aiConfig) return;
+
+    setAiLoading(true);
+    try {
+      const { error } = await supabase
+        .from("event_task_ai_config")
+        .update(updates)
+        .eq("id", aiConfig.id);
+
+      if (error) throw error;
+
+      setAiConfig({ ...aiConfig, ...updates });
+      toast({
+        title: "Updated",
+        description: "AI assistant settings updated.",
+      });
+    } catch (error) {
+      console.error("Error updating AI config:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update AI settings.",
+        variant: "destructive",
+      });
+    }
+    setAiLoading(false);
   };
 
   if (!config) {
@@ -274,6 +345,107 @@ const SettingsTab = ({ event, config, onConfigUpdate, onUpdate }: SettingsTabPro
         invitationUrl={config.invitation_image_url}
         onUploadSuccess={handleInvitationUpload}
       />
+
+      {/* AI Task Assistant */}
+      {config.feature_tasks_enabled && aiConfig && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              AI Task Assistant
+            </CardTitle>
+            <CardDescription>
+              Configure AI-powered task management and suggestions
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="ai-monitoring">AI Monitoring</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow AI to continuously monitor your event for task opportunities
+                </p>
+              </div>
+              <Switch
+                id="ai-monitoring"
+                checked={aiConfig.ai_monitoring_enabled}
+                onCheckedChange={(checked) =>
+                  handleAIConfigUpdate({ ai_monitoring_enabled: checked })
+                }
+                disabled={aiLoading}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="auto-suggest">Auto-Suggest Tasks</Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically generate task suggestions based on event analysis
+                </p>
+              </div>
+              <Switch
+                id="auto-suggest"
+                checked={aiConfig.auto_suggest_tasks}
+                onCheckedChange={(checked) =>
+                  handleAIConfigUpdate({ auto_suggest_tasks: checked })
+                }
+                disabled={aiLoading || !aiConfig.ai_monitoring_enabled}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="auto-create">Auto-Create Tasks</Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically create AI-suggested tasks without approval
+                </p>
+              </div>
+              <Switch
+                id="auto-create"
+                checked={aiConfig.auto_create_tasks}
+                onCheckedChange={(checked) =>
+                  handleAIConfigUpdate({ auto_create_tasks: checked })
+                }
+                disabled={aiLoading || !aiConfig.auto_suggest_tasks}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <Label htmlFor="analysis-frequency">Analysis Frequency (hours)</Label>
+              <Input
+                id="analysis-frequency"
+                type="number"
+                min="1"
+                max="168"
+                value={aiConfig.analysis_frequency_hours}
+                onChange={(e) =>
+                  handleAIConfigUpdate({
+                    analysis_frequency_hours: parseInt(e.target.value) || 24,
+                  })
+                }
+                disabled={aiLoading || !aiConfig.ai_monitoring_enabled}
+              />
+              <p className="text-xs text-muted-foreground">
+                How often the AI should analyze your event (1-168 hours)
+              </p>
+            </div>
+
+            {aiConfig.last_analysis_at && (
+              <div className="bg-muted p-3 rounded-lg text-sm">
+                <p className="text-muted-foreground">
+                  Last analyzed: {new Date(aiConfig.last_analysis_at).toLocaleString()}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Guest Settings Info */}
       <Card>
