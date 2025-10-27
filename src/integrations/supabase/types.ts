@@ -90,12 +90,226 @@ export type Database = {
           },
         ]
       }
+      event_configurations: {
+        Row: {
+          created_at: string
+          event_id: string
+          feature_food_planning_enabled: boolean
+          feature_logistics_enabled: boolean
+          feature_schedule_enabled: boolean
+          feature_sponsors_enabled: boolean
+          feature_vendors_enabled: boolean
+          feature_venues_enabled: boolean
+          feature_volunteers_enabled: boolean
+          id: string
+          invitation_image_url: string | null
+          is_published: boolean
+          published_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          feature_food_planning_enabled?: boolean
+          feature_logistics_enabled?: boolean
+          feature_schedule_enabled?: boolean
+          feature_sponsors_enabled?: boolean
+          feature_vendors_enabled?: boolean
+          feature_venues_enabled?: boolean
+          feature_volunteers_enabled?: boolean
+          id?: string
+          invitation_image_url?: string | null
+          is_published?: boolean
+          published_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          feature_food_planning_enabled?: boolean
+          feature_logistics_enabled?: boolean
+          feature_schedule_enabled?: boolean
+          feature_sponsors_enabled?: boolean
+          feature_vendors_enabled?: boolean
+          feature_venues_enabled?: boolean
+          feature_volunteers_enabled?: boolean
+          id?: string
+          invitation_image_url?: string | null
+          is_published?: boolean
+          published_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_configurations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_food_items: {
+        Row: {
+          actual_cost: number | null
+          assigned_volunteer_id: string | null
+          created_at: string
+          estimated_cost: number | null
+          food_session_id: string
+          food_type: string
+          id: string
+          item_name: string
+          notes: string | null
+          quantity: string | null
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          assigned_volunteer_id?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          food_session_id: string
+          food_type: string
+          id?: string
+          item_name: string
+          notes?: string | null
+          quantity?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number | null
+          assigned_volunteer_id?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          food_session_id?: string
+          food_type?: string
+          id?: string
+          item_name?: string
+          notes?: string | null
+          quantity?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_food_items_assigned_volunteer_id_fkey"
+            columns: ["assigned_volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "event_volunteers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_food_items_food_session_id_fkey"
+            columns: ["food_session_id"]
+            isOneToOne: false
+            referencedRelation: "event_food_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_food_sessions: {
+        Row: {
+          created_at: string
+          estimated_attendees: number | null
+          event_id: string
+          id: string
+          location: string | null
+          meal_type: string
+          notes: string | null
+          session_date: string
+          session_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_attendees?: number | null
+          event_id: string
+          id?: string
+          location?: string | null
+          meal_type: string
+          notes?: string | null
+          session_date: string
+          session_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estimated_attendees?: number | null
+          event_id?: string
+          id?: string
+          location?: string | null
+          meal_type?: string
+          notes?: string | null
+          session_date?: string
+          session_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_food_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_guest_categories: {
+        Row: {
+          benefits: string | null
+          category_level: number
+          category_name: string
+          created_at: string
+          display_color: string | null
+          event_id: string
+          id: string
+          max_guests: number | null
+          updated_at: string
+        }
+        Insert: {
+          benefits?: string | null
+          category_level?: number
+          category_name: string
+          created_at?: string
+          display_color?: string | null
+          event_id: string
+          id?: string
+          max_guests?: number | null
+          updated_at?: string
+        }
+        Update: {
+          benefits?: string | null
+          category_level?: number
+          category_name?: string
+          created_at?: string
+          display_color?: string | null
+          event_id?: string
+          id?: string
+          max_guests?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_guest_categories_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_guests: {
         Row: {
           created_at: string | null
           dietary_preferences: string | null
           email: string
           event_id: string
+          guest_category_id: string | null
           id: string
           invitation_status: string | null
           name: string
@@ -110,6 +324,7 @@ export type Database = {
           dietary_preferences?: string | null
           email: string
           event_id: string
+          guest_category_id?: string | null
           id?: string
           invitation_status?: string | null
           name: string
@@ -124,6 +339,7 @@ export type Database = {
           dietary_preferences?: string | null
           email?: string
           event_id?: string
+          guest_category_id?: string | null
           id?: string
           invitation_status?: string | null
           name?: string
@@ -139,6 +355,64 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_guests_guest_category_id_fkey"
+            columns: ["guest_category_id"]
+            isOneToOne: false
+            referencedRelation: "event_guest_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_invitations: {
+        Row: {
+          created_at: string
+          event_id: string
+          guest_id: string
+          id: string
+          invitation_code: string
+          opened_at: string | null
+          responded_at: string | null
+          response: string | null
+          sent_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          guest_id: string
+          id?: string
+          invitation_code: string
+          opened_at?: string | null
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          guest_id?: string
+          id?: string
+          invitation_code?: string
+          opened_at?: string | null
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_invitations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_invitations_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "event_guests"
             referencedColumns: ["id"]
           },
         ]

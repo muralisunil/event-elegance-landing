@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DurationSelector } from "@/components/event/DurationSelector";
 import { validateEventDates, calculateEndTime, formatDateForInput, getMinEventDate, getMaxEventDate } from "@/lib/utils";
+import { initializeDefaultConfiguration } from "@/lib/eventConfiguration";
 
 const outreachEventTypes = [
   { value: "workshop", label: "Workshop" },
@@ -239,6 +240,9 @@ const CreateOutreachEvent = () => {
       }]).select().single();
 
       if (error) throw error;
+
+      // Initialize default configuration
+      await initializeDefaultConfiguration(data.id);
 
       toast({
         title: "Success",

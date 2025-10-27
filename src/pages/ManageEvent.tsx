@@ -14,12 +14,15 @@ import BuildingRoomManager from "@/components/event/BuildingRoomManager";
 import VolunteersTab from "@/components/event/VolunteersTab";
 import SponsorsTab from "@/components/event/SponsorsTab";
 import VendorsTab from "@/components/event/VendorsTab";
+import { FoodPlanningTab } from "@/components/event/FoodPlanningTab";
+import { getEventConfiguration, initializeDefaultConfiguration } from "@/lib/eventConfiguration";
 
 const ManageEvent = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [config, setConfig] = useState<any>(null);
 
   useEffect(() => {
     fetchEvent();
@@ -46,6 +49,14 @@ const ManageEvent = () => {
     }
 
     setEvent(data);
+    
+    // Fetch or initialize configuration
+    let configuration = await getEventConfiguration(eventId);
+    if (!configuration) {
+      configuration = await initializeDefaultConfiguration(eventId);
+    }
+    setConfig(configuration);
+    
     setLoading(false);
   };
 
@@ -84,15 +95,16 @@ const ManageEvent = () => {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-9 mb-8">
+          <TabsList className="flex flex-wrap mb-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="venues">Venues</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            {config?.feature_venues_enabled && <TabsTrigger value="venues">Venues</TabsTrigger>}
+            {config?.feature_schedule_enabled && <TabsTrigger value="schedule">Schedule</TabsTrigger>}
             <TabsTrigger value="guests">Guests</TabsTrigger>
-            <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
-            <TabsTrigger value="sponsors">Sponsors</TabsTrigger>
-            <TabsTrigger value="vendors">Vendors</TabsTrigger>
-            <TabsTrigger value="logistics">Logistics</TabsTrigger>
+            {config?.feature_volunteers_enabled && <TabsTrigger value="volunteers">Volunteers</TabsTrigger>}
+            {config?.feature_sponsors_enabled && <TabsTrigger value="sponsors">Sponsors</TabsTrigger>}
+            {config?.feature_vendors_enabled && <TabsTrigger value="vendors">Vendors</TabsTrigger>}
+            {config?.feature_logistics_enabled && <TabsTrigger value="logistics">Logistics</TabsTrigger>}
+            {config?.feature_food_planning_enabled && <TabsTrigger value="food">Food</TabsTrigger>}
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -127,6 +139,12 @@ const ManageEvent = () => {
           <TabsContent value="logistics">
             <LogisticsTab eventId={eventId!} />
           </TabsContent>
+
+          {config?.feature_food_planning_enabled && (
+            <TabsContent value="food">
+              <FoodPlanningTab eventId={eventId!} event={event} />
+            </TabsContent>
+          )}
 
           <TabsContent value="settings">
             <SettingsTab event={event} onUpdate={fetchEvent} />

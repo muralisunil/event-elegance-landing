@@ -64,7 +64,7 @@ const SettingsTab = ({ event, onUpdate }: SettingsTabProps) => {
     purpose: event.purpose || "",
     goal: event.goal || "",
     location: event.location || "",
-    event_date: event.event_date || "",
+    event_date: event.event_date ? formatDateForInput(event.event_date) : "",
     event_time: event.event_time || "",
     durationHours: event.duration_minutes ? String(Math.floor(event.duration_minutes / 60)) : "2",
     durationMinutes: event.duration_minutes ? String(event.duration_minutes % 60) : "0",
