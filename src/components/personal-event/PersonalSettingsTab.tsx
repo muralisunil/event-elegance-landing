@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 interface PersonalSettingsTabProps {
   eventId: string;
   config: any;
-  onConfigUpdate: () => void;
+  onConfigUpdate: (newConfig: any) => void;
 }
 
 const PersonalSettingsTab = ({ eventId, config, onConfigUpdate }: PersonalSettingsTabProps) => {
@@ -52,8 +52,9 @@ const PersonalSettingsTab = ({ eventId, config, onConfigUpdate }: PersonalSettin
         title: "Success",
         description: "Feature setting updated.",
       });
-      setFeatures({ ...features, [feature]: value });
-      onConfigUpdate();
+      const updatedFeatures = { ...features, [feature]: value };
+      setFeatures(updatedFeatures);
+      onConfigUpdate({ ...config, ...updatedFeatures });
     }
   };
 
