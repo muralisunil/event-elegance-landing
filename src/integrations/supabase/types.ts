@@ -2364,6 +2364,18 @@ export type Database = {
         Args: { p_event_id: string; p_section: string; p_user_id: string }
         Returns: boolean
       }
+      is_personal_event_organizer: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_personal_event_organizer_with_edit: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_personal_event_owner: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       due_date_type:
