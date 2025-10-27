@@ -10,6 +10,7 @@ export interface EventConfiguration {
   feature_schedule_enabled: boolean;
   feature_logistics_enabled: boolean;
   feature_food_planning_enabled: boolean;
+  feature_tasks_enabled: boolean;
   is_published: boolean;
   published_at: string | null;
   invitation_image_url: string | null;
@@ -68,6 +69,7 @@ export async function initializeDefaultConfiguration(eventId: string) {
       feature_schedule_enabled: true,
       feature_logistics_enabled: true,
       feature_food_planning_enabled: false,
+      feature_tasks_enabled: true,
     })
     .select()
     .single();

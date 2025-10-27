@@ -98,6 +98,7 @@ export type Database = {
           feature_logistics_enabled: boolean
           feature_schedule_enabled: boolean
           feature_sponsors_enabled: boolean
+          feature_tasks_enabled: boolean | null
           feature_vendors_enabled: boolean
           feature_venues_enabled: boolean
           feature_volunteers_enabled: boolean
@@ -114,6 +115,7 @@ export type Database = {
           feature_logistics_enabled?: boolean
           feature_schedule_enabled?: boolean
           feature_sponsors_enabled?: boolean
+          feature_tasks_enabled?: boolean | null
           feature_vendors_enabled?: boolean
           feature_venues_enabled?: boolean
           feature_volunteers_enabled?: boolean
@@ -130,6 +132,7 @@ export type Database = {
           feature_logistics_enabled?: boolean
           feature_schedule_enabled?: boolean
           feature_sponsors_enabled?: boolean
+          feature_tasks_enabled?: boolean | null
           feature_vendors_enabled?: boolean
           feature_venues_enabled?: boolean
           feature_volunteers_enabled?: boolean
@@ -748,6 +751,258 @@ export type Database = {
           },
         ]
       }
+      event_task_ai_config: {
+        Row: {
+          ai_monitoring_enabled: boolean | null
+          analysis_frequency_hours: number | null
+          auto_create_tasks: boolean | null
+          auto_suggest_tasks: boolean | null
+          created_at: string | null
+          event_id: string
+          id: string
+          last_analysis_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_monitoring_enabled?: boolean | null
+          analysis_frequency_hours?: number | null
+          auto_create_tasks?: boolean | null
+          auto_suggest_tasks?: boolean | null
+          created_at?: string | null
+          event_id: string
+          id?: string
+          last_analysis_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_monitoring_enabled?: boolean | null
+          analysis_frequency_hours?: number | null
+          auto_create_tasks?: boolean | null
+          auto_suggest_tasks?: boolean | null
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          last_analysis_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_task_ai_config_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_task_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_task_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "event_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_task_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          id: string
+          is_system_message: boolean | null
+          task_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          id?: string
+          is_system_message?: boolean | null
+          task_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          id?: string
+          is_system_message?: boolean | null
+          task_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "event_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_task_reminders: {
+        Row: {
+          created_at: string | null
+          id: string
+          remind_at: string
+          reminder_type: string | null
+          sent_at: string | null
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          remind_at: string
+          reminder_type?: string | null
+          sent_at?: string | null
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          remind_at?: string
+          reminder_type?: string | null
+          sent_at?: string | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_task_reminders_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "event_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_tasks: {
+        Row: {
+          actual_hours: number | null
+          ai_suggestion_reason: string | null
+          category: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          due_date: string | null
+          due_date_type: Database["public"]["Enums"]["due_date_type"]
+          estimated_hours: number | null
+          event_id: string
+          id: string
+          is_ai_suggested: boolean | null
+          order_index: number | null
+          priority: Database["public"]["Enums"]["task_priority"] | null
+          relative_days: number | null
+          relative_hours: number | null
+          relative_to_food_session_id: string | null
+          relative_to_session_id: string | null
+          status: Database["public"]["Enums"]["task_status"] | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          actual_hours?: number | null
+          ai_suggestion_reason?: string | null
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          due_date_type?: Database["public"]["Enums"]["due_date_type"]
+          estimated_hours?: number | null
+          event_id: string
+          id?: string
+          is_ai_suggested?: boolean | null
+          order_index?: number | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          relative_days?: number | null
+          relative_hours?: number | null
+          relative_to_food_session_id?: string | null
+          relative_to_session_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          actual_hours?: number | null
+          ai_suggestion_reason?: string | null
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          due_date_type?: Database["public"]["Enums"]["due_date_type"]
+          estimated_hours?: number | null
+          event_id?: string
+          id?: string
+          is_ai_suggested?: boolean | null
+          order_index?: number | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          relative_days?: number | null
+          relative_hours?: number | null
+          relative_to_food_session_id?: string | null
+          relative_to_session_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_tasks_relative_to_food_session_id_fkey"
+            columns: ["relative_to_food_session_id"]
+            isOneToOne: false
+            referencedRelation: "event_food_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_tasks_relative_to_session_id_fkey"
+            columns: ["relative_to_session_id"]
+            isOneToOne: false
+            referencedRelation: "event_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_vendors: {
         Row: {
           booth_number: string | null
@@ -829,6 +1084,54 @@ export type Database = {
             columns: ["linked_sponsor_id"]
             isOneToOne: false
             referencedRelation: "event_sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_volunteer_permissions: {
+        Row: {
+          can_comment: boolean | null
+          can_create_tasks: boolean | null
+          can_edit_own_tasks: boolean | null
+          event_id: string
+          granted_at: string | null
+          granted_by: string
+          id: string
+          volunteer_id: string
+        }
+        Insert: {
+          can_comment?: boolean | null
+          can_create_tasks?: boolean | null
+          can_edit_own_tasks?: boolean | null
+          event_id: string
+          granted_at?: string | null
+          granted_by: string
+          id?: string
+          volunteer_id: string
+        }
+        Update: {
+          can_comment?: boolean | null
+          can_create_tasks?: boolean | null
+          can_edit_own_tasks?: boolean | null
+          event_id?: string
+          granted_at?: string | null
+          granted_by?: string
+          id?: string
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_volunteer_permissions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_volunteer_permissions_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "event_volunteers"
             referencedColumns: ["id"]
           },
         ]
@@ -963,9 +1266,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_task_due_date: {
+        Args: { _task: Database["public"]["Tables"]["event_tasks"]["Row"] }
+        Returns: string
+      }
+      can_manage_event_tasks: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_event_tasks: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
+      due_date_type:
+        | "fixed_datetime"
+        | "relative_to_event"
+        | "relative_to_session"
+        | "relative_to_food_session"
       outreach_event_type:
         | "workshop"
         | "seminar"
@@ -992,6 +1311,13 @@ export type Database = {
         | "sports_event"
         | "cultural_event"
         | "charity_auction"
+      task_priority: "low" | "medium" | "high" | "urgent"
+      task_status:
+        | "not_started"
+        | "in_progress"
+        | "completed"
+        | "blocked"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1119,6 +1445,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      due_date_type: [
+        "fixed_datetime",
+        "relative_to_event",
+        "relative_to_session",
+        "relative_to_food_session",
+      ],
       outreach_event_type: [
         "workshop",
         "seminar",
@@ -1145,6 +1477,14 @@ export const Constants = {
         "sports_event",
         "cultural_event",
         "charity_auction",
+      ],
+      task_priority: ["low", "medium", "high", "urgent"],
+      task_status: [
+        "not_started",
+        "in_progress",
+        "completed",
+        "blocked",
+        "cancelled",
       ],
     },
   },

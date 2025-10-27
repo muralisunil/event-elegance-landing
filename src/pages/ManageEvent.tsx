@@ -15,6 +15,7 @@ import VolunteersTab from "@/components/event/VolunteersTab";
 import SponsorsTab from "@/components/event/SponsorsTab";
 import VendorsTab from "@/components/event/VendorsTab";
 import { FoodPlanningTab } from "@/components/event/FoodPlanningTab";
+import { TasksTab } from "@/components/event/tasks/TasksTab";
 import { getEventConfiguration, initializeDefaultConfiguration } from "@/lib/eventConfiguration";
 
 const ManageEvent = () => {
@@ -109,6 +110,7 @@ const ManageEvent = () => {
             {config?.feature_vendors_enabled && <TabsTrigger value="vendors">Vendors</TabsTrigger>}
             {config?.feature_logistics_enabled && <TabsTrigger value="logistics">Logistics</TabsTrigger>}
             {config?.feature_food_planning_enabled && <TabsTrigger value="food">Food</TabsTrigger>}
+            {config?.feature_tasks_enabled && <TabsTrigger value="tasks">Tasks</TabsTrigger>}
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -147,6 +149,12 @@ const ManageEvent = () => {
           {config?.feature_food_planning_enabled && (
             <TabsContent value="food">
               <FoodPlanningTab eventId={eventId!} event={event} />
+            </TabsContent>
+          )}
+
+          {config?.feature_tasks_enabled && (
+            <TabsContent value="tasks">
+              <TasksTab eventId={eventId!} />
             </TabsContent>
           )}
 
