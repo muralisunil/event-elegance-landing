@@ -2380,6 +2380,10 @@ export type Database = {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
+      is_personal_event_organizer_by_email: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_personal_event_organizer_with_edit: {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
