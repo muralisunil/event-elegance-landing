@@ -34,6 +34,8 @@ const PersonalVenuesTab = ({ eventId }: PersonalVenuesTabProps) => {
       .from('personal_event_venues')
       .select('*')
       .eq('event_id', eventId)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -64,18 +66,24 @@ const PersonalVenuesTab = ({ eventId }: PersonalVenuesTabProps) => {
       notes: formData.notes || null,
     };
 
-    let error;
+    let error, data;
     if (venue) {
       const result = await supabase
         .from('personal_event_venues')
         .update(venueData)
-        .eq('id', venue.id);
+        .eq('id', venue.id)
+        .select()
+        .single();
       error = result.error;
+      data = result.data;
     } else {
       const result = await supabase
         .from('personal_event_venues')
-        .insert(venueData);
+        .insert(venueData)
+        .select()
+        .single();
       error = result.error;
+      data = result.data;
     }
 
     if (error) {
@@ -89,7 +97,16 @@ const PersonalVenuesTab = ({ eventId }: PersonalVenuesTabProps) => {
         title: "Success",
         description: "Venue saved successfully.",
       });
-      fetchVenue();
+      if (data) {
+        setVenue(data);
+        setFormData({
+          venue_name: data.venue_name || "",
+          address: data.address || "",
+          capacity: data.capacity?.toString() || "",
+          facilities: data.facilities || "",
+          notes: data.notes || "",
+        });
+      }
     }
     setSaving(false);
   };

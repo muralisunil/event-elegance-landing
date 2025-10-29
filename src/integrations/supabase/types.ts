@@ -104,6 +104,8 @@ export type Database = {
           feature_volunteers_enabled: boolean
           id: string
           invitation_image_url: string | null
+          invitation_message: string | null
+          invitation_title: string | null
           is_published: boolean
           published_at: string | null
           updated_at: string
@@ -121,6 +123,8 @@ export type Database = {
           feature_volunteers_enabled?: boolean
           id?: string
           invitation_image_url?: string | null
+          invitation_message?: string | null
+          invitation_title?: string | null
           is_published?: boolean
           published_at?: string | null
           updated_at?: string
@@ -138,6 +142,8 @@ export type Database = {
           feature_volunteers_enabled?: boolean
           id?: string
           invitation_image_url?: string | null
+          invitation_message?: string | null
+          invitation_title?: string | null
           is_published?: boolean
           published_at?: string | null
           updated_at?: string
@@ -1388,6 +1394,8 @@ export type Database = {
           guest_viewable_sections: Json | null
           id: string
           invitation_image_url: string | null
+          invitation_message: string | null
+          invitation_title: string | null
           is_published: boolean | null
           published_at: string | null
           updated_at: string | null
@@ -1405,6 +1413,8 @@ export type Database = {
           guest_viewable_sections?: Json | null
           id?: string
           invitation_image_url?: string | null
+          invitation_message?: string | null
+          invitation_title?: string | null
           is_published?: boolean | null
           published_at?: string | null
           updated_at?: string | null
@@ -1422,6 +1432,8 @@ export type Database = {
           guest_viewable_sections?: Json | null
           id?: string
           invitation_image_url?: string | null
+          invitation_message?: string | null
+          invitation_title?: string | null
           is_published?: boolean | null
           published_at?: string | null
           updated_at?: string | null

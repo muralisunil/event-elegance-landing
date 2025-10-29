@@ -19,6 +19,7 @@ import PersonalScheduleTab from "@/components/personal-event/PersonalScheduleTab
 import PersonalLogisticsTab from "@/components/personal-event/PersonalLogisticsTab";
 import PersonalTasksTab from "@/components/personal-event/PersonalTasksTab";
 import PersonalOrganizersTab from "@/components/personal-event/PersonalOrganizersTab";
+import PersonalInvitationTab from "@/components/personal-event/PersonalInvitationTab";
 
 const ManagePersonalEvent = () => {
   const { eventId } = useParams();
@@ -120,6 +121,7 @@ const ManagePersonalEvent = () => {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-full flex-wrap">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="invitation">Invitation</TabsTrigger>
           {config.feature_venues_enabled && <TabsTrigger value="venues">Venues</TabsTrigger>}
           {config.feature_schedule_enabled && <TabsTrigger value="schedule">Schedule</TabsTrigger>}
           <TabsTrigger value="guests">Guests</TabsTrigger>
@@ -132,6 +134,10 @@ const ManagePersonalEvent = () => {
 
         <TabsContent value="overview">
           <PersonalOverviewTab event={event} />
+        </TabsContent>
+
+        <TabsContent value="invitation">
+          <PersonalInvitationTab eventId={eventId!} event={event} />
         </TabsContent>
 
         {config.feature_venues_enabled && (

@@ -10,7 +10,6 @@ import { toast } from "@/hooks/use-toast";
 import { Settings, Rocket, Shield, Sparkles } from "lucide-react";
 import { getEventConfiguration, updateEventConfiguration, ensureVolunteerCategory } from "@/lib/eventConfiguration";
 import { PublishEventDialog } from "./PublishEventDialog";
-import { InvitationUpload } from "./InvitationUpload";
 
 interface SettingsTabProps {
   event: any;
@@ -90,23 +89,6 @@ const SettingsTab = ({ event, config, onConfigUpdate, onUpdate }: SettingsTabPro
       });
     }
     setLoading(false);
-  };
-
-  const handleInvitationUpload = async (url: string) => {
-    try {
-      const updatedConfig = await updateEventConfiguration(event.id, { invitation_image_url: url });
-      onConfigUpdate(updatedConfig);
-      toast({
-        title: "Success",
-        description: "Invitation image updated.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save invitation image.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleAIConfigUpdate = async (updates: Partial<typeof aiConfig>) => {
@@ -339,12 +321,6 @@ const SettingsTab = ({ event, config, onConfigUpdate, onUpdate }: SettingsTabPro
           )}
         </CardContent>
       </Card>
-
-      {/* Invitation Management */}
-      <InvitationUpload
-        invitationUrl={config.invitation_image_url}
-        onUploadSuccess={handleInvitationUpload}
-      />
 
       {/* AI Task Assistant */}
       {config.feature_tasks_enabled && aiConfig && (

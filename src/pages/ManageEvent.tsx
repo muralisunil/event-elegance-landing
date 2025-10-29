@@ -14,6 +14,7 @@ import BuildingRoomManager from "@/components/event/BuildingRoomManager";
 import VolunteersTab from "@/components/event/VolunteersTab";
 import SponsorsTab from "@/components/event/SponsorsTab";
 import VendorsTab from "@/components/event/VendorsTab";
+import InvitationTab from "@/components/event/InvitationTab";
 import { FoodPlanningTab } from "@/components/event/FoodPlanningTab";
 import { TasksTab } from "@/components/event/tasks/TasksTab";
 import { getEventConfiguration, initializeDefaultConfiguration } from "@/lib/eventConfiguration";
@@ -116,6 +117,7 @@ const ManageEvent = () => {
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="flex flex-wrap mb-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="invitation">Invitation</TabsTrigger>
             {config?.feature_venues_enabled && <TabsTrigger value="venues">Venues</TabsTrigger>}
             {config?.feature_schedule_enabled && <TabsTrigger value="schedule">Schedule</TabsTrigger>}
             <TabsTrigger value="guests">Guests</TabsTrigger>
@@ -130,6 +132,10 @@ const ManageEvent = () => {
 
           <TabsContent value="overview">
             <OverviewTab event={event} onUpdate={refreshEventData} />
+          </TabsContent>
+
+          <TabsContent value="invitation">
+            <InvitationTab eventId={eventId!} event={event} />
           </TabsContent>
 
           <TabsContent value="venues">
