@@ -3,23 +3,23 @@ import { CheckCircle2, Clock, Shield, Users } from "lucide-react";
 const features = [
   {
     icon: CheckCircle2,
-    title: "Easy Booking Process",
-    description: "Streamlined booking system that saves you time and eliminates complexity",
-  },
-  {
-    icon: Clock,
-    title: "24/7 Support",
-    description: "Round-the-clock assistance to ensure your event planning goes smoothly",
-  },
-  {
-    icon: Shield,
-    title: "Secure Transactions",
-    description: "Bank-level security for all your bookings and sensitive information",
+    title: "For Organizers",
+    description: "Easy planning tools, task management, guest tracking, and comprehensive event analytics",
   },
   {
     icon: Users,
-    title: "Expert Coordinators",
-    description: "Professional event coordinators dedicated to making your vision a reality",
+    title: "For Attendees",
+    description: "Easy discovery, secure booking, RSVP management, and personalized event dashboard",
+  },
+  {
+    icon: Shield,
+    title: "For Vendors",
+    description: "Business growth opportunities, event connections, portfolio showcase, and secure contracts",
+  },
+  {
+    icon: Clock,
+    title: "For Sponsors",
+    description: "Brand visibility, ROI tracking, flexible partnership opportunities, and analytics",
   },
 ];
 

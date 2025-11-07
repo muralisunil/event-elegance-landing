@@ -25,18 +25,21 @@ const Hero = () => {
       <div className="container mx-auto px-4 py-32 relative z-10">
         <div className="max-w-3xl">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            Transform Your Event Vision Into Reality
+            Your Complete Event Ecosystem
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-primary-foreground/90">
-            Whether it's a personal celebration, commercial showcase, or corporate gathering, 
-            we make event booking seamless and stress-free.
+            Whether you're organizing, attending, providing services, or sponsoring - 
+            we bring everyone together to create unforgettable experiences.
           </p>
           <div className="flex flex-wrap gap-4">
             <Button variant="hero" size="lg">
-              Get Started
+              Create Event
             </Button>
             <Button variant="outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
-              Learn More
+              Browse Events
+            </Button>
+            <Button variant="outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
+              Partner with Us
             </Button>
           </div>
         </div>
