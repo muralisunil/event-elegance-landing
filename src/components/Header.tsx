@@ -14,9 +14,16 @@ const Header = () => {
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 text-primary font-bold text-xl">
-          <Calendar className="w-6 h-6" />
-          <span>Book My Event</span>
+        <Link to="/" className="flex items-center gap-2">
+          <Calendar className="w-6 h-6 text-primary" />
+          <div className="flex flex-col">
+            <span className="text-primary font-bold text-xl leading-tight">
+              Book My Event
+            </span>
+            <span className="text-xs text-muted-foreground">
+              by Metro Hub
+            </span>
+          </div>
         </Link>
         
         <nav className="hidden md:flex items-center gap-8">
