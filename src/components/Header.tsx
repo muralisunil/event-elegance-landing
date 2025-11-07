@@ -78,7 +78,12 @@ const Header = () => {
           </NavigationMenu>
         </nav>
         
-        <Button variant="default">Contact Us</Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" asChild>
+            <Link to="/auth">Sign In</Link>
+          </Button>
+          <Button variant="default">Contact Us</Button>
+        </div>
       </div>
     </header>
   );
