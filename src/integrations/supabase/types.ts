@@ -556,6 +556,36 @@ export type Database = {
           },
         ]
       }
+      event_managers: {
+        Row: {
+          added_at: string | null
+          added_by: string
+          can_edit: boolean | null
+          event_id: string
+          event_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          added_by: string
+          can_edit?: boolean | null
+          event_id: string
+          event_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string
+          can_edit?: boolean | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_rooms: {
         Row: {
           building_id: string | null
@@ -2341,6 +2371,93 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          organization: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          organization?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          organization?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_event_permissions: {
+        Row: {
+          can_create: boolean | null
+          can_manage: boolean | null
+          event_category: Database["public"]["Enums"]["event_category"]
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          can_create?: boolean | null
+          can_manage?: boolean | null
+          event_category: Database["public"]["Enums"]["event_category"]
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          can_create?: boolean | null
+          can_manage?: boolean | null
+          event_category?: Database["public"]["Enums"]["event_category"]
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2355,6 +2472,10 @@ export type Database = {
       calculate_task_due_date: {
         Args: { _task: Database["public"]["Tables"]["event_tasks"]["Row"] }
         Returns: string
+      }
+      can_manage_assigned_event: {
+        Args: { _event_id: string; _event_type: string; _user_id: string }
+        Returns: boolean
       }
       can_manage_event_tasks: {
         Args: { _event_id: string; _user_id: string }
@@ -2372,8 +2493,23 @@ export type Database = {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
+      has_event_permission: {
+        Args: {
+          _category: Database["public"]["Enums"]["event_category"]
+          _permission: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_guest_view_access: {
         Args: { p_event_id: string; p_section: string; p_user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
         Returns: boolean
       }
       is_personal_event_organizer: {
@@ -2394,11 +2530,13 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "user"
       due_date_type:
         | "fixed_datetime"
         | "relative_to_event"
         | "relative_to_session"
         | "relative_to_food_session"
+      event_category: "personal" | "outreach" | "commercial"
       outreach_event_type:
         | "workshop"
         | "seminar"
@@ -2559,12 +2697,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       due_date_type: [
         "fixed_datetime",
         "relative_to_event",
         "relative_to_session",
         "relative_to_food_session",
       ],
+      event_category: ["personal", "outreach", "commercial"],
       outreach_event_type: [
         "workshop",
         "seminar",

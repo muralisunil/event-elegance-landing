@@ -73,6 +73,20 @@ const EventCategories = () => {
             </Card>
           ))}
         </div>
+
+        {/* Manage Events Link */}
+        <div className="text-center mt-12">
+          <p className="text-muted-foreground mb-4">
+            Already have events? Manage them all in one place
+          </p>
+          <Button 
+            variant="link" 
+            className="text-primary text-lg"
+            onClick={() => navigate('/manage-events')}
+          >
+            Go to Manage Events →
+          </Button>
+        </div>
       </div>
     </section>
   );
