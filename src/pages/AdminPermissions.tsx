@@ -25,24 +25,27 @@ interface UserWithPermissions {
 const AdminPermissions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin, loading: adminLoading, error: adminError } = useAdminRole();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithPermissions[]>([]);
 
   useEffect(() => {
-    if (!adminLoading) {
-      if (!isAdmin) {
-        toast({
-          title: "Access Denied",
-          description: "You don't have admin permissions.",
-          variant: "destructive",
-        });
-        navigate('/');
-        return;
-      }
-      fetchUsers();
+    // Temporarily open to all authenticated users
+    checkAuthAndFetch();
+  }, []);
+
+  const checkAuthAndFetch = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Access Denied",
+        description: "Please sign in to access this page.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
     }
-  }, [isAdmin, adminLoading, navigate]);
+    fetchUsers();
+  };
 
   const fetchUsers = async () => {
     // Fetch all users from auth.users via profiles
@@ -176,24 +179,15 @@ const AdminPermissions = () => {
     }
   };
 
-  if (adminLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">
-            {adminLoading ? 'Checking permissions...' : 'Loading users...'}
-          </p>
-          {adminError && (
-            <p className="text-destructive text-sm mt-2">Error: {adminError}</p>
-          )}
+          <p className="text-muted-foreground">Loading users...</p>
         </div>
       </div>
     );
-  }
-
-  if (!isAdmin) {
-    return null; // Will redirect in useEffect
   }
 
   return (

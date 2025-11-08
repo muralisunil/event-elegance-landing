@@ -560,28 +560,28 @@ export type Database = {
         Row: {
           added_at: string | null
           added_by: string
-          can_edit: boolean | null
           event_id: string
           event_type: string
           id: string
+          role: Database["public"]["Enums"]["event_manager_role"]
           user_id: string
         }
         Insert: {
           added_at?: string | null
           added_by: string
-          can_edit?: boolean | null
           event_id: string
           event_type: string
           id?: string
+          role?: Database["public"]["Enums"]["event_manager_role"]
           user_id: string
         }
         Update: {
           added_at?: string | null
           added_by?: string
-          can_edit?: boolean | null
           event_id?: string
           event_type?: string
           id?: string
+          role?: Database["public"]["Enums"]["event_manager_role"]
           user_id?: string
         }
         Relationships: []
@@ -2537,6 +2537,7 @@ export type Database = {
         | "relative_to_session"
         | "relative_to_food_session"
       event_category: "personal" | "outreach" | "commercial"
+      event_manager_role: "viewer" | "editor" | "coordinator"
       outreach_event_type:
         | "workshop"
         | "seminar"
@@ -2705,6 +2706,7 @@ export const Constants = {
         "relative_to_food_session",
       ],
       event_category: ["personal", "outreach", "commercial"],
+      event_manager_role: ["viewer", "editor", "coordinator"],
       outreach_event_type: [
         "workshop",
         "seminar",

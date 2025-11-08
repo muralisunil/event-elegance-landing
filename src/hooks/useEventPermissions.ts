@@ -38,7 +38,7 @@ export const useEventPermissions = (eventId: string, eventType: 'personal' | 'ou
       // Check if user is assigned as a manager
       const { data: managerData } = await supabase
         .from('event_managers')
-        .select('can_edit')
+        .select('role')
         .eq('event_id', eventId)
         .eq('event_type', eventType)
         .eq('user_id', user.id)
@@ -46,7 +46,8 @@ export const useEventPermissions = (eventId: string, eventType: 'personal' | 'ou
 
       if (managerData) {
         setCanView(true);
-        setCanEdit(managerData.can_edit);
+        // Editor and Coordinator can edit, Viewer cannot
+        setCanEdit(managerData.role === 'editor' || managerData.role === 'coordinator');
       }
 
       setLoading(false);

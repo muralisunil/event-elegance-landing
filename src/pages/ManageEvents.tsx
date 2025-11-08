@@ -105,18 +105,24 @@ const ManageEvents = () => {
         is_owner: true,
         can_manage: true
       })),
-      ...assignedPersonalEvents.map(e => ({
-        ...e,
-        type: 'personal' as const,
-        is_owner: false,
-        can_manage: assignedEvents?.find(ae => ae.event_id === e.id)?.can_edit || false
-      })),
-      ...assignedOutreachEvents.map(e => ({
-        ...e,
-        type: 'outreach' as const,
-        is_owner: false,
-        can_manage: assignedEvents?.find(ae => ae.event_id === e.id)?.can_edit || false
-      }))
+      ...assignedPersonalEvents.map(e => {
+        const assignment = assignedEvents?.find(ae => ae.event_id === e.id);
+        return {
+          ...e,
+          type: 'personal' as const,
+          is_owner: false,
+          can_manage: assignment?.role === 'editor' || assignment?.role === 'coordinator' || false
+        };
+      }),
+      ...assignedOutreachEvents.map(e => {
+        const assignment = assignedEvents?.find(ae => ae.event_id === e.id);
+        return {
+          ...e,
+          type: 'outreach' as const,
+          is_owner: false,
+          can_manage: assignment?.role === 'editor' || assignment?.role === 'coordinator' || false
+        };
+      })
     ];
 
     setEvents(allEvents);
