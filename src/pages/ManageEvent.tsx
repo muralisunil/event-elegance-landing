@@ -19,14 +19,17 @@ import { FoodPlanningTab } from "@/components/event/FoodPlanningTab";
 import { TasksTab } from "@/components/event/tasks/TasksTab";
 import { getEventConfiguration, initializeDefaultConfiguration } from "@/lib/eventConfiguration";
 import { EventManagersSection } from "@/components/event/EventManagersSection";
+import { useEventPermissions } from "@/hooks/useEventPermissions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Lock } from "lucide-react";
 
 const ManageEvent = () => {
-  const [isOwner, setIsOwner] = useState(false);
   const { eventId } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<any>(null);
+  const { canEdit, canView, isOwner, loading: permissionsLoading } = useEventPermissions(eventId || '', 'outreach');
 
   useEffect(() => {
     fetchEvent();
@@ -53,10 +56,6 @@ const ManageEvent = () => {
     }
 
     setEvent(data);
-    
-    // Check if current user is owner
-    const { data: { user } } = await supabase.auth.getUser();
-    setIsOwner(user?.id === data.user_id);
     
     // Fetch or initialize configuration
     let configuration = await getEventConfiguration(eventId);
@@ -86,7 +85,7 @@ const ManageEvent = () => {
     setConfig(newConfig);
   };
 
-  if (loading) {
+  if (loading || permissionsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -99,6 +98,20 @@ const ManageEvent = () => {
 
   if (!event) {
     return null;
+  }
+
+  // Check if user has view permission
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Alert variant="destructive" className="max-w-md">
+          <Lock className="h-4 w-4" />
+          <AlertDescription>
+            You don't have permission to view this event.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -118,6 +131,14 @@ const ManageEvent = () => {
           <p className="text-muted-foreground">
             {new Date(event.event_date).toLocaleDateString()} at {event.event_time}
           </p>
+          {!canEdit && (
+            <Alert className="mt-4">
+              <Lock className="h-4 w-4" />
+              <AlertDescription>
+                You have view-only access to this event. Contact the event owner to request edit permissions.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <Tabs defaultValue="overview" className="w-full">

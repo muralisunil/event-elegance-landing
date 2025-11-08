@@ -21,6 +21,9 @@ import PersonalTasksTab from "@/components/personal-event/PersonalTasksTab";
 import PersonalOrganizersTab from "@/components/personal-event/PersonalOrganizersTab";
 import PersonalInvitationTab from "@/components/personal-event/PersonalInvitationTab";
 import { EventManagersSection } from "@/components/event/EventManagersSection";
+import { useEventPermissions } from "@/hooks/useEventPermissions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Lock } from "lucide-react";
 
 const ManagePersonalEvent = () => {
   const { eventId } = useParams();
@@ -28,7 +31,7 @@ const ManagePersonalEvent = () => {
   const [event, setEvent] = useState<any>(null);
   const [config, setConfig] = useState<PersonalEventConfiguration | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
+  const { canEdit, canView, isOwner, loading: permissionsLoading } = useEventPermissions(eventId || '', 'personal');
 
   useEffect(() => {
     if (eventId) {
@@ -52,10 +55,6 @@ const ManagePersonalEvent = () => {
     }
 
     setEvent(eventData);
-
-    // Check if current user is owner
-    const { data: { user } } = await supabase.auth.getUser();
-    setIsOwner(user?.id === eventData.user_id);
 
     let configuration = await getPersonalEventConfiguration(eventId!);
     if (!configuration) {
@@ -84,7 +83,7 @@ const ManagePersonalEvent = () => {
     setConfig(newConfig);
   };
 
-  if (loading) {
+  if (loading || permissionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -96,6 +95,20 @@ const ManagePersonalEvent = () => {
   }
 
   if (!event || !config) return null;
+
+  // Check if user has view permission
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-md">
+          <Lock className="h-4 w-4" />
+          <AlertDescription>
+            You don't have permission to view this event.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   // Calculate number of tabs for grid layout
   const tabCount = [
@@ -122,6 +135,14 @@ const ManagePersonalEvent = () => {
           {format(new Date(event.event_date), 'PPP')} at{' '}
           {format(new Date(`2000-01-01T${event.event_time}`), 'p')}
         </p>
+        {!canEdit && (
+          <Alert className="mt-4">
+            <Lock className="h-4 w-4" />
+            <AlertDescription>
+              You have view-only access to this event. Contact the event owner to request edit permissions.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <Tabs defaultValue="overview" className="w-full">

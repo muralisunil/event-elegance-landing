@@ -4,33 +4,52 @@ import { supabase } from '@/integrations/supabase/client';
 export const useAdminRole = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    checkAdminRole();
+  }, []);
+
+  const checkAdminRole = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('Error getting user:', userError);
+        setError('Failed to authenticate');
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
       if (!user) {
         setIsAdmin(false);
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
+      // Use RPC call to check admin status with security definer function
+      const { data, error: rpcError } = await supabase
+        .rpc('has_role', { 
+          _user_id: user.id, 
+          _role: 'admin' 
+        });
 
-      if (error) {
-        console.error('Error checking admin role:', error);
+      if (rpcError) {
+        console.error('Error checking admin role:', rpcError);
+        setError(rpcError.message);
         setIsAdmin(false);
       } else {
         setIsAdmin(data === true);
       }
-      
+    } catch (error) {
+      console.error('Error in checkAdminRole:', error);
+      setError('An unexpected error occurred');
+      setIsAdmin(false);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    checkRole();
-  }, []);
-
-  return { isAdmin, loading };
+  return { isAdmin, loading, error, refetch: checkAdminRole };
 };
