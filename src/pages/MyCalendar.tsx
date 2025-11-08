@@ -29,20 +29,17 @@ const MyCalendar = () => {
         return;
       }
 
-      // Fetch all invitations for this user
+      // Fetch personal events where user has guest access
       const { data: accessRecords, error } = await supabase
         .from('personal_event_guest_access')
         .select(`
           *,
-          personal_event_invitations!inner(
+          personal_event_guests!inner(
             id,
-            invitation_code,
-            response,
-            personal_event_guests!inner(
-              id,
-              name,
-              email
-            ),
+            name,
+            email,
+            event_id,
+            invitation_status,
             personal_events!inner(
               id,
               name,
@@ -66,8 +63,8 @@ const MyCalendar = () => {
     }
   };
 
-  const getStatusBadge = (response: string | null) => {
-    switch (response) {
+  const getStatusBadge = (status: string | null) => {
+    switch (status) {
       case 'confirmed':
         return <Badge className="bg-green-500">Confirmed</Badge>;
       case 'declined':
@@ -78,16 +75,16 @@ const MyCalendar = () => {
   };
 
   const filteredEvents = events.filter(record => {
-    const response = record.personal_event_invitations.response;
-    if (filter === 'confirmed') return response === 'confirmed';
-    if (filter === 'pending') return !response || response === 'pending';
-    if (filter === 'declined') return response === 'declined';
+    const status = record.personal_event_guests?.invitation_status;
+    if (filter === 'confirmed') return status === 'confirmed';
+    if (filter === 'pending') return !status || status === 'pending';
+    if (filter === 'declined') return status === 'declined';
     return true;
   });
 
   const sortedEvents = filteredEvents.sort((a, b) => {
-    const dateA = new Date(a.personal_event_invitations.personal_events.event_date);
-    const dateB = new Date(b.personal_event_invitations.personal_events.event_date);
+    const dateA = new Date(a.personal_event_guests?.personal_events?.event_date);
+    const dateB = new Date(b.personal_event_guests?.personal_events?.event_date);
     return dateA.getTime() - dateB.getTime();
   });
 
@@ -120,21 +117,23 @@ const MyCalendar = () => {
           <TabsList>
             <TabsTrigger value="all">All ({events.length})</TabsTrigger>
             <TabsTrigger value="confirmed">
-              Confirmed ({events.filter(e => e.personal_event_invitations.response === 'confirmed').length})
+              Confirmed ({events.filter(e => e.personal_event_guests?.invitation_status === 'confirmed').length})
             </TabsTrigger>
             <TabsTrigger value="pending">
-              Pending ({events.filter(e => !e.personal_event_invitations.response || e.personal_event_invitations.response === 'pending').length})
+              Pending ({events.filter(e => !e.personal_event_guests?.invitation_status || e.personal_event_guests?.invitation_status === 'pending').length})
             </TabsTrigger>
             <TabsTrigger value="declined">
-              Declined ({events.filter(e => e.personal_event_invitations.response === 'declined').length})
+              Declined ({events.filter(e => e.personal_event_guests?.invitation_status === 'declined').length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value={filter} className="space-y-4 mt-6">
             {sortedEvents.length > 0 ? (
               sortedEvents.map((record) => {
-                const event = record.personal_event_invitations.personal_events;
-                const invitation = record.personal_event_invitations;
+                const guest = record.personal_event_guests;
+                const event = guest?.personal_events;
+                
+                if (!guest || !event) return null;
                 
                 return (
                   <Card key={record.id}>
@@ -160,7 +159,7 @@ const MyCalendar = () => {
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                          {getStatusBadge(invitation.response)}
+                          {getStatusBadge(guest.invitation_status)}
                           {event.event_types && event.event_types.length > 0 && (
                             <Badge variant="outline" className="capitalize">
                               {event.event_types[0].replace('_', ' ')}
@@ -172,21 +171,12 @@ const MyCalendar = () => {
                     <CardContent>
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => navigate(`/view-event/${invitation.invitation_code}`)}
+                          onClick={() => navigate(`/view-event/${event.id}`)}
                           size="sm"
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
-                        {(!invitation.response || invitation.response === 'pending') && (
-                          <Button
-                            onClick={() => navigate(`/rsvp/${invitation.invitation_code}`)}
-                            variant="outline"
-                            size="sm"
-                          >
-                            RSVP Now
-                          </Button>
-                        )}
                       </div>
                     </CardContent>
                   </Card>
