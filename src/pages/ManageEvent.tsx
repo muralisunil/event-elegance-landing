@@ -18,8 +18,10 @@ import InvitationTab from "@/components/event/InvitationTab";
 import { FoodPlanningTab } from "@/components/event/FoodPlanningTab";
 import { TasksTab } from "@/components/event/tasks/TasksTab";
 import { getEventConfiguration, initializeDefaultConfiguration } from "@/lib/eventConfiguration";
+import { EventManagersSection } from "@/components/event/EventManagersSection";
 
 const ManageEvent = () => {
+  const [isOwner, setIsOwner] = useState(false);
   const { eventId } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
@@ -51,6 +53,10 @@ const ManageEvent = () => {
     }
 
     setEvent(data);
+    
+    // Check if current user is owner
+    const { data: { user } } = await supabase.auth.getUser();
+    setIsOwner(user?.id === data.user_id);
     
     // Fetch or initialize configuration
     let configuration = await getEventConfiguration(eventId);
@@ -127,6 +133,7 @@ const ManageEvent = () => {
             {config?.feature_logistics_enabled && <TabsTrigger value="logistics">Logistics</TabsTrigger>}
             {config?.feature_food_planning_enabled && <TabsTrigger value="food">Food</TabsTrigger>}
             {config?.feature_tasks_enabled && <TabsTrigger value="tasks">Tasks</TabsTrigger>}
+            {isOwner && <TabsTrigger value="managers">Managers</TabsTrigger>}
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -175,6 +182,16 @@ const ManageEvent = () => {
           {config?.feature_tasks_enabled && (
             <TabsContent value="tasks">
               <TasksTab eventId={eventId!} />
+            </TabsContent>
+          )}
+
+          {isOwner && (
+            <TabsContent value="managers">
+              <EventManagersSection 
+                eventId={eventId!} 
+                eventType="outreach"
+                isOwner={isOwner}
+              />
             </TabsContent>
           )}
 

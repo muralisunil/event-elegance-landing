@@ -20,6 +20,7 @@ import PersonalLogisticsTab from "@/components/personal-event/PersonalLogisticsT
 import PersonalTasksTab from "@/components/personal-event/PersonalTasksTab";
 import PersonalOrganizersTab from "@/components/personal-event/PersonalOrganizersTab";
 import PersonalInvitationTab from "@/components/personal-event/PersonalInvitationTab";
+import { EventManagersSection } from "@/components/event/EventManagersSection";
 
 const ManagePersonalEvent = () => {
   const { eventId } = useParams();
@@ -27,6 +28,7 @@ const ManagePersonalEvent = () => {
   const [event, setEvent] = useState<any>(null);
   const [config, setConfig] = useState<PersonalEventConfiguration | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -50,6 +52,10 @@ const ManagePersonalEvent = () => {
     }
 
     setEvent(eventData);
+
+    // Check if current user is owner
+    const { data: { user } } = await supabase.auth.getUser();
+    setIsOwner(user?.id === eventData.user_id);
 
     let configuration = await getPersonalEventConfiguration(eventId!);
     if (!configuration) {
@@ -129,6 +135,7 @@ const ManagePersonalEvent = () => {
           {config.feature_logistics_enabled && <TabsTrigger value="logistics">Logistics</TabsTrigger>}
           {config.feature_tasks_enabled && <TabsTrigger value="tasks">Tasks</TabsTrigger>}
           <TabsTrigger value="organizers">Organizers</TabsTrigger>
+          {isOwner && <TabsTrigger value="managers">Managers</TabsTrigger>}
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -190,9 +197,19 @@ const ManagePersonalEvent = () => {
           </div>
         </TabsContent>
 
-            <TabsContent value="settings">
-              <PersonalSettingsTab eventId={eventId} config={config} event={event} onConfigUpdate={handleConfigUpdate} />
-            </TabsContent>
+        {isOwner && (
+          <TabsContent value="managers">
+            <EventManagersSection 
+              eventId={eventId!} 
+              eventType="personal"
+              isOwner={isOwner}
+            />
+          </TabsContent>
+        )}
+
+        <TabsContent value="settings">
+          <PersonalSettingsTab eventId={eventId} config={config} event={event} onConfigUpdate={handleConfigUpdate} />
+        </TabsContent>
       </Tabs>
     </div>
   );
