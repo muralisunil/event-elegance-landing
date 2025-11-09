@@ -1915,6 +1915,47 @@ export type Database = {
           },
         ]
       }
+      personal_event_messages: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          is_from_organizer: boolean
+          message: string
+          read_at: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          is_from_organizer?: boolean
+          message: string
+          read_at?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_from_organizer?: boolean
+          message?: string
+          read_at?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_event_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "personal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personal_event_organizers: {
         Row: {
           accepted_at: string | null

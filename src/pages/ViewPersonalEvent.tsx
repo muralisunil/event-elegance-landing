@@ -12,6 +12,8 @@ import { GuestViewFood } from "@/components/personal-event/guest-view/GuestViewF
 import { GuestViewGuests } from "@/components/personal-event/guest-view/GuestViewGuests";
 import { GuestViewVenues } from "@/components/personal-event/guest-view/GuestViewVenues";
 import { GuestViewLogistics } from "@/components/personal-event/guest-view/GuestViewLogistics";
+import { OrganizerContactCard } from "@/components/personal-event/guest-view/OrganizerContactCard";
+import { MessagingDialog } from "@/components/personal-event/guest-view/MessagingDialog";
 
 const ViewPersonalEvent = () => {
   const { invitationCode } = useParams();
@@ -24,6 +26,9 @@ const ViewPersonalEvent = () => {
   const [guests, setGuests] = useState<any[]>([]);
   const [venues, setVenues] = useState<any[]>([]);
   const [logistics, setLogistics] = useState<any[]>([]);
+  const [organizers, setOrganizers] = useState<any[]>([]);
+  const [eventOwner, setEventOwner] = useState<any>(null);
+  const [messagingOpen, setMessagingOpen] = useState(false);
 
   const [user, setUser] = useState<any>(null);
   
@@ -73,12 +78,14 @@ const ViewPersonalEvent = () => {
       // Fetch all data in parallel
       const eventId = invData.event_id;
       
-      const [schedulesData, foodData, guestsData, venuesData, logisticsData] = await Promise.all([
+      const [schedulesData, foodData, guestsData, venuesData, logisticsData, organizersData, ownerData] = await Promise.all([
         supabase.from('personal_event_schedules').select('*').eq('event_id', eventId),
         supabase.from('personal_event_food_sessions').select('*, food_items:personal_event_food_items(*)').eq('event_id', eventId),
         supabase.from('personal_event_guests').select('*, guest_category:personal_event_guest_categories(*)').eq('event_id', eventId),
         supabase.from('personal_event_venues').select('*').eq('event_id', eventId),
         supabase.from('personal_event_logistics').select('*').eq('event_id', eventId),
+        supabase.from('personal_event_organizers').select('*').eq('event_id', eventId).eq('status', 'accepted'),
+        supabase.from('profiles').select('full_name').eq('id', invData.personal_events.user_id).single(),
       ]);
 
       setSchedules(schedulesData.data || []);
@@ -86,6 +93,11 @@ const ViewPersonalEvent = () => {
       setGuests(guestsData.data || []);
       setVenues(venuesData.data || []);
       setLogistics(logisticsData.data || []);
+      setOrganizers(organizersData.data || []);
+      setEventOwner({
+        name: ownerData.data?.full_name || 'Event Owner',
+        email: invData.personal_events.user_id,
+      });
     } catch (error: any) {
       console.error('Error fetching event:', error);
       toast.error(error.message || "Failed to load event");
@@ -148,6 +160,14 @@ const ViewPersonalEvent = () => {
           onRequestCoOrganizer={handleRequestCoOrganizer}
         />
 
+        {eventOwner && (
+          <OrganizerContactCard
+            organizers={organizers}
+            eventOwner={eventOwner}
+            onOpenMessaging={() => setMessagingOpen(true)}
+          />
+        )}
+
         <Tabs defaultValue={accessState.viewableSections[0] || 'schedule'} className="w-full">
           <TabsList className="w-full justify-start">
             {accessState.viewableSections.includes('schedule') && (
@@ -200,6 +220,13 @@ const ViewPersonalEvent = () => {
             </TabsContent>
           )}
         </Tabs>
+
+        <MessagingDialog
+          open={messagingOpen}
+          onOpenChange={setMessagingOpen}
+          eventId={event?.id || ''}
+          eventName={event?.name || ''}
+        />
       </div>
     </div>
   );
