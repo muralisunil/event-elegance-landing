@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, ShieldOff } from 'lucide-react';
+import { Shield, ShieldOff, Search } from 'lucide-react';
 
 interface UserWithPermissions {
   id: string;
@@ -25,6 +27,9 @@ export const IndividualTab = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithPermissions[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   useEffect(() => {
     fetchUsers();
@@ -184,6 +189,25 @@ export const IndividualTab = () => {
     }
   };
 
+  const filteredUsers = users.filter(user => {
+    // Search filter
+    const matchesSearch = searchTerm === '' || 
+      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Role filter
+    const matchesRole = roleFilter === 'all' || 
+      (roleFilter === 'admin' && user.is_admin) ||
+      (roleFilter === 'user' && !user.is_admin);
+    
+    // Status filter
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && user.is_active) ||
+      (statusFilter === 'inactive' && !user.is_active);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -204,6 +228,55 @@ export const IndividualTab = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="space-y-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={(value: any) => setRoleFilter(value)}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Showing {filteredUsers.length} of {users.length} users</span>
+            {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setRoleFilter('all');
+                  setStatusFilter('all');
+                }}
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -219,7 +292,14 @@ export const IndividualTab = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map(user => (
+              {filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    No users found matching your filters
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map(user => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div>
@@ -284,7 +364,8 @@ export const IndividualTab = () => {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
