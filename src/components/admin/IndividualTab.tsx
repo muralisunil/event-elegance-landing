@@ -13,6 +13,7 @@ interface UserWithPermissions {
   email: string;
   full_name: string | null;
   is_admin: boolean;
+  is_active: boolean;
   permissions: {
     personal?: { can_create: boolean; can_manage: boolean };
     outreach?: { can_create: boolean; can_manage: boolean };
@@ -33,7 +34,7 @@ export const IndividualTab = () => {
     // Fetch all users from auth.users via profiles
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name');
+      .select('id, full_name, is_active');
 
     if (!profiles) {
       setLoading(false);
@@ -75,6 +76,7 @@ export const IndividualTab = () => {
         email: user.email || '',
         full_name: profile.full_name,
         is_admin: userRoles.some(r => r.role === 'admin'),
+        is_active: profile.is_active ?? true,
         permissions: permsMap
       });
     }
@@ -107,6 +109,27 @@ export const IndividualTab = () => {
       toast({
         title: 'Success',
         description: 'Permission updated'
+      });
+      fetchUsers();
+    }
+  };
+
+  const toggleUserActive = async (userId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_active: !currentStatus })
+      .eq('id', userId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update user status',
+        variant: 'destructive'
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: currentStatus ? 'User login disabled' : 'User login enabled'
       });
       fetchUsers();
     }
@@ -187,6 +210,7 @@ export const IndividualTab = () => {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead className="text-center">Login Active</TableHead>
                 <TableHead className="text-center">Personal Create</TableHead>
                 <TableHead className="text-center">Personal Manage</TableHead>
                 <TableHead className="text-center">Outreach Create</TableHead>
@@ -209,6 +233,12 @@ export const IndividualTab = () => {
                     ) : (
                       <Badge variant="outline">User</Badge>
                     )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={user.is_active}
+                      onCheckedChange={() => toggleUserActive(user.id, user.is_active)}
+                    />
                   </TableCell>
                   <TableCell className="text-center">
                     <Switch
