@@ -2419,6 +2419,7 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          is_active: boolean
           organization: string | null
           phone: string | null
           updated_at: string | null
@@ -2429,6 +2430,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          is_active?: boolean
           organization?: string | null
           phone?: string | null
           updated_at?: string | null
@@ -2439,6 +2441,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
           organization?: string | null
           phone?: string | null
           updated_at?: string | null
@@ -2569,6 +2572,7 @@ export type Database = {
         Args: { _event_id: string; _user_id: string }
         Returns: boolean
       }
+      is_user_active: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
