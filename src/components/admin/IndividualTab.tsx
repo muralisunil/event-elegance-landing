@@ -211,6 +211,17 @@ export const IndividualTab = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
