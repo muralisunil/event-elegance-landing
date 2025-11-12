@@ -81,7 +81,7 @@ export const OrganizationTab = () => {
     try {
       // Fetch organizations
       const { data: orgs, error: orgsError } = await supabase
-        .from('organizations')
+        .from('organizations' as any)
         .select('*')
         .order('name');
 
@@ -94,7 +94,7 @@ export const OrganizationTab = () => {
 
       // Fetch members for each organization
       const { data: members, error: membersError } = await supabase
-        .from('organization_members')
+        .from('organization_members' as any)
         .select('organization_id, user_id, role');
 
       if (membersError) throw membersError;

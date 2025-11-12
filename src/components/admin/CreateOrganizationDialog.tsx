@@ -47,7 +47,7 @@ export const CreateOrganizationDialog = ({ users, onSuccess }: CreateOrganizatio
     try {
       // Create organization
       const { data: org, error: orgError } = await supabase
-        .from('organizations')
+        .from('organizations' as any)
         .insert({
           name: formData.name.trim(),
           description: formData.description.trim() || null,
@@ -60,7 +60,7 @@ export const CreateOrganizationDialog = ({ users, onSuccess }: CreateOrganizatio
 
       // Add owner as member
       const { error: memberError } = await supabase
-        .from('organization_members')
+        .from('organization_members' as any)
         .insert({
           organization_id: org.id,
           user_id: formData.ownerId,
