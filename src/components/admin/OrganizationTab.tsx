@@ -234,14 +234,14 @@ export const OrganizationTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrganizations.length === 0 ? (
+                {paginatedOrganizations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
                       {searchTerm ? 'No organizations match your search' : 'No organizations created yet'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredOrganizations.map((org) => (
+                  paginatedOrganizations.map((org) => (
                     <TableRow key={org.id}>
                       <TableCell className="font-medium">{org.name}</TableCell>
                       <TableCell className="max-w-xs truncate">
