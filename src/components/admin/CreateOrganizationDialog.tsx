@@ -54,7 +54,7 @@ export const CreateOrganizationDialog = ({ users, onSuccess }: CreateOrganizatio
           is_active: true
         })
         .select()
-        .single();
+        .single() as any;
 
       if (orgError) throw orgError;
 
@@ -65,7 +65,7 @@ export const CreateOrganizationDialog = ({ users, onSuccess }: CreateOrganizatio
           organization_id: org.id,
           user_id: formData.ownerId,
           role: 'owner'
-        });
+        }) as any;
 
       if (memberError) throw memberError;
 

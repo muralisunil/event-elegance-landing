@@ -83,7 +83,7 @@ export const OrganizationTab = () => {
       const { data: orgs, error: orgsError } = await supabase
         .from('organizations' as any)
         .select('*')
-        .order('name');
+        .order('name') as any;
 
       if (orgsError) throw orgsError;
 
@@ -95,7 +95,7 @@ export const OrganizationTab = () => {
       // Fetch members for each organization
       const { data: members, error: membersError } = await supabase
         .from('organization_members' as any)
-        .select('organization_id, user_id, role');
+        .select('organization_id, user_id, role') as any;
 
       if (membersError) throw membersError;
 
@@ -103,8 +103,8 @@ export const OrganizationTab = () => {
       const orgsWithDetails: Organization[] = [];
 
       for (const org of orgs) {
-        const orgMembers = members?.filter(m => m.organization_id === org.id) || [];
-        const ownerMember = orgMembers.find(m => m.role === 'owner');
+        const orgMembers = (members as any)?.filter((m: any) => m.organization_id === org.id) || [];
+        const ownerMember = orgMembers.find((m: any) => m.role === 'owner');
         
         let ownerDetails = undefined;
         if (ownerMember) {
