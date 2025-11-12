@@ -127,7 +127,7 @@ export const OrganizationTab = () => {
         }
 
         orgsWithDetails.push({
-          ...org,
+          ...(org as any),
           owner: ownerDetails,
           member_count: orgMembers.length
         });
