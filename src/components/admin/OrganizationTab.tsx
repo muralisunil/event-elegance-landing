@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { CreateOrganizationDialog } from './CreateOrganizationDialog';
-import { Search, Building2 } from 'lucide-react';
+import { Search, Building2, Eye } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -32,6 +33,7 @@ interface User {
 
 export const OrganizationTab = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -231,12 +233,13 @@ export const OrganizationTab = () => {
                   <TableHead>Members</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedOrganizations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       {searchTerm ? 'No organizations match your search' : 'No organizations created yet'}
                     </TableCell>
                   </TableRow>
@@ -271,6 +274,16 @@ export const OrganizationTab = () => {
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(org.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => navigate(`/admin/organizations/${org.id}`)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
