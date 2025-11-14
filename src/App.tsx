@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import ManageEvents from "./pages/ManageEvents";
 import AdminPermissions from "./pages/AdminPermissions";
+import OrganizationDetails from "./pages/OrganizationDetails";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/manage-events" element={<ManageEvents />} />
           <Route path="/admin" element={<AdminPermissions />} />
+          <Route path="/admin/organizations/:id" element={<OrganizationDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
