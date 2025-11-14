@@ -1338,6 +1338,106 @@ export type Database = {
           },
         ]
       }
+      organization_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_activity_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          joined_at: string
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          joined_at?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["organization_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          joined_at?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["organization_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       outreach_events: {
         Row: {
           age_restriction: string | null
@@ -2549,11 +2649,27 @@ export type Database = {
         Args: { p_event_id: string; p_section: string; p_user_id: string }
         Returns: boolean
       }
+      has_org_role: {
+        Args: {
+          _org_id: string
+          _role: Database["public"]["Enums"]["organization_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_org_owner_or_coowner: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       is_personal_event_organizer: {
@@ -2583,6 +2699,7 @@ export type Database = {
         | "relative_to_food_session"
       event_category: "personal" | "outreach" | "commercial"
       event_manager_role: "viewer" | "editor" | "coordinator"
+      organization_role: "owner" | "co_owner" | "member"
       outreach_event_type:
         | "workshop"
         | "seminar"
@@ -2752,6 +2869,7 @@ export const Constants = {
       ],
       event_category: ["personal", "outreach", "commercial"],
       event_manager_role: ["viewer", "editor", "coordinator"],
+      organization_role: ["owner", "co_owner", "member"],
       outreach_event_type: [
         "workshop",
         "seminar",
