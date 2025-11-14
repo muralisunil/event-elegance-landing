@@ -7,8 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Palette } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ColorThemeSelector } from '@/components/ColorThemeSelector';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -117,6 +120,33 @@ const Settings = () => {
         <h1 className="text-4xl font-bold mb-8">Settings</h1>
 
         <div className="space-y-6">
+          {/* Appearance Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Palette className="h-5 w-5 text-primary" />
+                <CardTitle>Appearance</CardTitle>
+              </div>
+              <CardDescription>Customize how the application looks and feels</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base mb-3 block">Theme Mode</Label>
+                <div className="flex items-center gap-2">
+                  <ThemeSwitcher />
+                  <span className="text-sm text-muted-foreground">Switch between light, dark, or system theme</span>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <Label className="text-base mb-3 block">Color Theme</Label>
+                <ColorThemeSelector />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Profile Section */}
           <Card>
             <CardHeader>

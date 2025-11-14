@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Menu, X, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import {
   Sheet,
   SheetContent,
@@ -88,6 +89,9 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center gap-3">
+          {/* Theme Switcher */}
+          <ThemeSwitcher />
+          
           {/* Desktop buttons */}
           {user ? (
             <DropdownMenu>
@@ -174,6 +178,12 @@ const Header = () => {
                 </Link>
                 
                 <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-border">
+                  {/* Theme Switcher for Mobile */}
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm font-medium">Theme</span>
+                    <ThemeSwitcher />
+                  </div>
+                  
                   {user ? (
                     <>
                       <div className="px-2 py-2 text-sm">
