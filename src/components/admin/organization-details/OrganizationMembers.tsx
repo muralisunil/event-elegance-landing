@@ -48,16 +48,14 @@ export function OrganizationMembers({ organizationId }: OrganizationMembersProps
         (data || []).map(async (member) => {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name')
+            .select('full_name, email')
             .eq('id', member.user_id)
             .single();
-
-          const { data: { user } } = await supabase.auth.admin.getUserById(member.user_id);
 
           return {
             ...member,
             user: {
-              email: user?.email || 'Unknown',
+              email: profile?.email || 'Unknown',
               full_name: profile?.full_name || null
             }
           };
