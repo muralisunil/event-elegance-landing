@@ -2605,6 +2605,72 @@ export type Database = {
         }
         Relationships: []
       }
+      vendors: {
+        Row: {
+          address: string | null
+          business_name: string
+          business_type: string | null
+          city: string | null
+          contact_email: string
+          contact_phone: string | null
+          country: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          logo_url: string | null
+          onboarding_completed: boolean | null
+          postal_code: string | null
+          state: string | null
+          updated_at: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          business_type?: string | null
+          city?: string | null
+          contact_email: string
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          onboarding_completed?: boolean | null
+          postal_code?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          business_type?: string | null
+          city?: string | null
+          contact_email?: string
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          onboarding_completed?: boolean | null
+          postal_code?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2692,9 +2758,10 @@ export type Database = {
         Returns: boolean
       }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
+      is_vendor: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "vendor"
       due_date_type:
         | "fixed_datetime"
         | "relative_to_event"
@@ -2863,7 +2930,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "vendor"],
       due_date_type: [
         "fixed_datetime",
         "relative_to_event",

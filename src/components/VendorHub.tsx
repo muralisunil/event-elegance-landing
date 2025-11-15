@@ -53,11 +53,11 @@ const VendorHub = () => {
         </div>
 
         <div className="flex flex-wrap gap-4 justify-center">
-          <Button size="lg">
+          <Button size="lg" onClick={() => window.location.href = '/vendor/register'}>
             Register as Vendor
           </Button>
-          <Button variant="outline" size="lg">
-            Learn More
+          <Button variant="outline" size="lg" onClick={() => window.location.href = '/vendor/dashboard'}>
+            Vendor Dashboard
           </Button>
         </div>
       </div>
