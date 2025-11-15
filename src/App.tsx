@@ -23,6 +23,10 @@ import Settings from "./pages/Settings";
 import ManageEvents from "./pages/ManageEvents";
 import AdminPermissions from "./pages/AdminPermissions";
 import OrganizationDetails from "./pages/OrganizationDetails";
+import VendorRegistration from "./pages/VendorRegistration";
+import VendorOnboarding from "./pages/VendorOnboarding";
+import VendorDashboard from "./pages/VendorDashboard";
+import VendorProfile from "./pages/VendorProfile";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +61,10 @@ const App = () => (
           <Route path="/manage-events" element={<ManageEvents />} />
           <Route path="/admin" element={<AdminPermissions />} />
           <Route path="/admin/organizations/:id" element={<OrganizationDetails />} />
+          <Route path="/vendor/register" element={<VendorRegistration />} />
+          <Route path="/vendor/onboarding" element={<VendorOnboarding />} />
+          <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+          <Route path="/vendor/profile" element={<VendorProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
