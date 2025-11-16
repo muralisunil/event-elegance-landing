@@ -1152,6 +1152,72 @@ export type Database = {
           },
         ]
       }
+      event_vendor_bookings: {
+        Row: {
+          contract_amount: number | null
+          created_at: string
+          event_date: string
+          event_id: string
+          id: string
+          notes: string | null
+          payment_status: string | null
+          requested_at: string
+          requested_by: string
+          responded_at: string | null
+          services_required: string
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          contract_amount?: number | null
+          created_at?: string
+          event_date: string
+          event_id: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          requested_at?: string
+          requested_by: string
+          responded_at?: string | null
+          services_required: string
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          contract_amount?: number | null
+          created_at?: string
+          event_date?: string
+          event_id?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          requested_at?: string
+          requested_by?: string
+          responded_at?: string | null
+          services_required?: string
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_vendor_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_vendor_bookings_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_vendors: {
         Row: {
           booth_number: string | null
@@ -2604,6 +2670,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vendor_messages: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          message: string
+          read_at: string | null
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          message: string
+          read_at?: string | null
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read_at?: string | null
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "event_vendor_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vendor_reviews: {
         Row: {

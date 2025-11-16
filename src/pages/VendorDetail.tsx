@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, MapPin, Mail, Phone, Globe, Star } from "lucide-react";
+import { BookVendorDialog } from "@/components/vendor/BookVendorDialog";
+import { ArrowLeft, MapPin, Mail, Phone, Globe, Star, Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 

@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVendorProfile } from "@/hooks/useVendorProfile";
+import { VendorBookingsTab } from "@/components/vendor/VendorBookingsTab";
 import { 
   Store, 
   Settings, 
@@ -124,7 +126,7 @@ const VendorDashboard = () => {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
               <Package className="w-8 h-8 text-primary mb-2" />
@@ -135,7 +137,7 @@ const VendorDashboard = () => {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full" disabled>
-                Coming in Phase 2
+                Coming Soon
               </Button>
             </CardContent>
           </Card>
@@ -150,52 +152,7 @@ const VendorDashboard = () => {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full" disabled>
-                Coming in Phase 3
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <FileText className="w-8 h-8 text-primary mb-2" />
-              <CardTitle>Bookings</CardTitle>
-              <CardDescription>
-                View and manage your bookings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming in Phase 4
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <Users className="w-8 h-8 text-primary mb-2" />
-              <CardTitle>Opportunities</CardTitle>
-              <CardDescription>
-                Browse events seeking your services
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming in Phase 5
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <BarChart3 className="w-8 h-8 text-primary mb-2" />
-              <CardTitle>Analytics</CardTitle>
-              <CardDescription>
-                Track your performance and growth
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming in Phase 6
+                Coming Soon
               </Button>
             </CardContent>
           </Card>
@@ -215,6 +172,19 @@ const VendorDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Bookings Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Bookings</CardTitle>
+            <CardDescription>
+              Manage your event bookings and communicate with organizers
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <VendorBookingsTab userType="vendor" />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
