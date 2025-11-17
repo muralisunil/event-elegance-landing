@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useVendorDetails } from "@/hooks/useVendorDetails";
+import { useVendorServices } from "@/hooks/useVendorServices";
+import { useVendorPortfolio } from "@/hooks/useVendorPortfolio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { BookVendorDialog } from "@/components/vendor/BookVendorDialog";
-import { ArrowLeft, MapPin, Mail, Phone, Globe, Star, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, MapPin, Mail, Phone, Globe, Star, Calendar as CalendarIcon, Package, DollarSign } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,6 +17,8 @@ const VendorDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { vendor, reviews, stats, loading, addReview } = useVendorDetails(id!);
+  const { services, loading: servicesLoading } = useVendorServices(id);
+  const { portfolio, loading: portfolioLoading } = useVendorPortfolio(id);
   const { toast } = useToast();
   
   const [rating, setRating] = useState(5);
@@ -155,6 +159,75 @@ const VendorDetail = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Services Section */}
+        {services.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Services</CardTitle>
+              <CardDescription>
+                Available services and pricing
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {services.map((service) => (
+                  <div key={service.id} className="flex items-start justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-primary" />
+                        <h4 className="font-semibold">{service.service_name}</h4>
+                      </div>
+                      {service.description && (
+                        <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
+                      )}
+                    </div>
+                    {service.base_price && (
+                      <div className="flex items-center text-sm font-semibold ml-4">
+                        <DollarSign className="w-4 h-4" />
+                        {service.base_price}
+                        {service.price_unit && (
+                          <span className="ml-1 text-muted-foreground font-normal">{service.price_unit}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Portfolio Section */}
+        {portfolio.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Portfolio</CardTitle>
+              <CardDescription>
+                Work samples and past projects
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {portfolio.map((item) => (
+                  <div key={item.id} className="space-y-2">
+                    <div className="aspect-video rounded-lg overflow-hidden">
+                      <img
+                        src={item.image_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h4 className="font-semibold text-sm">{item.title}</h4>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Reviews Section */}
         <Card className="mb-6">
