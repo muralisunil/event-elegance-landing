@@ -2671,6 +2671,44 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_availability: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          is_available: boolean | null
+          notes: string | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          is_available?: boolean | null
+          notes?: string | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_available?: boolean | null
+          notes?: string | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_availability_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_messages: {
         Row: {
           booking_id: string
@@ -2709,6 +2747,44 @@ export type Database = {
           },
         ]
       }
+      vendor_portfolio: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          title: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          title: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          title?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_portfolio_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_reviews: {
         Row: {
           created_at: string
@@ -2740,6 +2816,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "vendor_reviews_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_services: {
+        Row: {
+          base_price: number | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          price_unit: string | null
+          service_name: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          base_price?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_unit?: string | null
+          service_name: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          base_price?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_unit?: string | null
+          service_name?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_services_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"

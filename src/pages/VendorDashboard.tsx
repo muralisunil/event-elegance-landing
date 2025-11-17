@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVendorProfile } from "@/hooks/useVendorProfile";
 import { VendorBookingsTab } from "@/components/vendor/VendorBookingsTab";
+import { VendorAnalyticsDashboard } from "@/components/vendor/VendorAnalyticsDashboard";
+import { VendorServicesManager } from "@/components/vendor/VendorServicesManager";
+import { VendorPortfolioManager } from "@/components/vendor/VendorPortfolioManager";
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 import { 
   Store, 
   Settings, 
@@ -22,6 +27,21 @@ import {
 const VendorDashboard = () => {
   const navigate = useNavigate();
   const { vendor, loading, isVendor } = useVendorProfile();
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (!loading && !isVendor) {
@@ -125,66 +145,103 @@ const VendorDashboard = () => {
           ))}
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <Package className="w-8 h-8 text-primary mb-2" />
-              <CardTitle>Services</CardTitle>
-              <CardDescription>
-                Manage your service offerings and pricing
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+          </TabsList>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <Star className="w-8 h-8 text-primary mb-2" />
-              <CardTitle>Portfolio</CardTitle>
-              <CardDescription>
-                Showcase your work and testimonials
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
-              </Button>
-            </CardContent>
-          </Card>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Actions Grid */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+                const element = document.querySelector('[value="services"]');
+                if (element instanceof HTMLElement) element.click();
+              }}>
+                <CardHeader>
+                  <Package className="w-8 h-8 text-primary mb-2" />
+                  <CardTitle>Services</CardTitle>
+                  <CardDescription>
+                    Manage your service offerings and pricing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    Manage Services
+                  </Button>
+                </CardContent>
+              </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/vendor/profile")}>
-            <CardHeader>
-              <Settings className="w-8 h-8 text-primary mb-2" />
-              <CardTitle>Profile Settings</CardTitle>
-              <CardDescription>
-                Update your business information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Manage Profile
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+                const element = document.querySelector('[value="portfolio"]');
+                if (element instanceof HTMLElement) element.click();
+              }}>
+                <CardHeader>
+                  <Star className="w-8 h-8 text-primary mb-2" />
+                  <CardTitle>Portfolio</CardTitle>
+                  <CardDescription>
+                    Showcase your work and testimonials
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    View Portfolio
+                  </Button>
+                </CardContent>
+              </Card>
 
-        {/* Bookings Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Bookings</CardTitle>
-            <CardDescription>
-              Manage your event bookings and communicate with organizers
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/vendor/profile")}>
+                <CardHeader>
+                  <Settings className="w-8 h-8 text-primary mb-2" />
+                  <CardTitle>Profile Settings</CardTitle>
+                  <CardDescription>
+                    Update your business information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    Manage Profile
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Latest updates and bookings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  No recent activity to display
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bookings" className="space-y-4">
             <VendorBookingsTab userType="vendor" />
-          </CardContent>
-        </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4">
+            <VendorAnalyticsDashboard vendorId={vendor.id} />
+          </TabsContent>
+
+          <TabsContent value="services" className="space-y-4">
+            <VendorServicesManager vendorId={vendor.id} />
+          </TabsContent>
+
+          <TabsContent value="portfolio" className="space-y-4">
+            <VendorPortfolioManager vendorId={vendor.id} userId={session?.user?.id || ''} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
