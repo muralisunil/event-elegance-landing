@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 
 const VendorDirectory = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [businessType, setBusinessType] = useState("");
+  const [businessType, setBusinessType] = useState("all");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   
   const { vendors, loading } = useVendors({
     searchTerm,
-    businessType: businessType || undefined,
+    businessType: businessType === "all" ? undefined : businessType,
     city: city || undefined,
     state: state || undefined,
   });
@@ -55,7 +55,7 @@ const VendorDirectory = () => {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   <SelectItem value="Catering">Catering</SelectItem>
                   <SelectItem value="Photography">Photography</SelectItem>
                   <SelectItem value="Venue">Venue</SelectItem>
@@ -94,7 +94,7 @@ const VendorDirectory = () => {
               size="sm"
               onClick={() => {
                 setSearchTerm("");
-                setBusinessType("");
+                setBusinessType("all");
                 setCity("");
                 setState("");
               }}

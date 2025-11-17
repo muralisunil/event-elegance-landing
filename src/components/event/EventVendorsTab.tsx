@@ -21,11 +21,11 @@ interface EventVendorsTabProps {
 export const EventVendorsTab = ({ eventId, eventDate }: EventVendorsTabProps) => {
   const [browseOpen, setBrowseOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [businessType, setBusinessType] = useState("");
+  const [businessType, setBusinessType] = useState("all");
   
   const { vendors, loading: vendorsLoading } = useVendors({
     searchTerm,
-    businessType: businessType || undefined,
+    businessType: businessType === "all" ? undefined : businessType,
   });
   
   const { bookings, loading: bookingsLoading } = useVendorBookings('organizer');
@@ -80,7 +80,7 @@ export const EventVendorsTab = ({ eventId, eventDate }: EventVendorsTabProps) =>
                       <SelectValue placeholder="All types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All types</SelectItem>
+                      <SelectItem value="all">All types</SelectItem>
                       <SelectItem value="Catering">Catering</SelectItem>
                       <SelectItem value="Photography">Photography</SelectItem>
                       <SelectItem value="Venue">Venue</SelectItem>
