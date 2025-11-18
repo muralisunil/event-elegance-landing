@@ -2787,33 +2787,52 @@ export type Database = {
       }
       vendor_reviews: {
         Row: {
+          booking_id: string | null
           created_at: string
           id: string
+          is_verified: boolean | null
           rating: number
           review_text: string | null
           updated_at: string
           user_id: string
           vendor_id: string
+          vendor_responded_at: string | null
+          vendor_response: string | null
         }
         Insert: {
+          booking_id?: string | null
           created_at?: string
           id?: string
+          is_verified?: boolean | null
           rating: number
           review_text?: string | null
           updated_at?: string
           user_id: string
           vendor_id: string
+          vendor_responded_at?: string | null
+          vendor_response?: string | null
         }
         Update: {
+          booking_id?: string | null
           created_at?: string
           id?: string
+          is_verified?: boolean | null
           rating?: number
           review_text?: string | null
           updated_at?: string
           user_id?: string
           vendor_id?: string
+          vendor_responded_at?: string | null
+          vendor_response?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vendor_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "event_vendor_bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vendor_reviews_vendor_id_fkey"
             columns: ["vendor_id"]
@@ -2902,6 +2921,7 @@ export type Database = {
       vendors: {
         Row: {
           address: string | null
+          average_rating: number | null
           business_name: string
           business_type: string | null
           city: string | null
@@ -2917,12 +2937,14 @@ export type Database = {
           onboarding_completed: boolean | null
           postal_code: string | null
           state: string | null
+          total_reviews: number | null
           updated_at: string | null
           user_id: string
           website: string | null
         }
         Insert: {
           address?: string | null
+          average_rating?: number | null
           business_name: string
           business_type?: string | null
           city?: string | null
@@ -2938,12 +2960,14 @@ export type Database = {
           onboarding_completed?: boolean | null
           postal_code?: string | null
           state?: string | null
+          total_reviews?: number | null
           updated_at?: string | null
           user_id: string
           website?: string | null
         }
         Update: {
           address?: string | null
+          average_rating?: number | null
           business_name?: string
           business_type?: string | null
           city?: string | null
@@ -2959,6 +2983,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           postal_code?: string | null
           state?: string | null
+          total_reviews?: number | null
           updated_at?: string | null
           user_id?: string
           website?: string | null
