@@ -6,44 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { BookVendorDialog } from "@/components/vendor/BookVendorDialog";
+import { VendorReviews } from "@/components/vendor/VendorReviews";
 import { ArrowLeft, MapPin, Mail, Phone, Globe, Star, Calendar as CalendarIcon, Package, DollarSign } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 const VendorDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { vendor, reviews, stats, loading, addReview } = useVendorDetails(id!);
+  const { vendor, reviews, stats, loading } = useVendorDetails(id!);
   const { services, loading: servicesLoading } = useVendorServices(id);
   const { portfolio, loading: portfolioLoading } = useVendorPortfolio(id);
-  const { toast } = useToast();
-  
-  const [rating, setRating] = useState(5);
-  const [reviewText, setReviewText] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmitReview = async () => {
-    if (!reviewText.trim()) {
-      toast({
-        title: "Error",
-        description: "Please write a review",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await addReview(rating, reviewText);
-      setReviewText("");
-      setRating(5);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -229,91 +201,8 @@ const VendorDetail = () => {
           </Card>
         )}
 
-        {/* Reviews Section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Reviews</CardTitle>
-            <CardDescription>
-              See what others are saying about this vendor
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Add Review */}
-            <div className="space-y-4 p-4 border rounded-lg">
-              <h4 className="font-semibold">Write a Review</h4>
-              
-              <div className="space-y-2">
-                <Label>Rating</Label>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setRating(star)}
-                      className="transition-colors"
-                    >
-                      <Star
-                        className={`w-6 h-6 ${
-                          star <= rating
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="review">Your Review</Label>
-                <Textarea
-                  id="review"
-                  placeholder="Share your experience with this vendor..."
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  rows={4}
-                />
-              </div>
-
-              <Button onClick={handleSubmitReview} disabled={submitting}>
-                {submitting ? "Submitting..." : "Submit Review"}
-              </Button>
-            </div>
-
-            {/* Reviews List */}
-            {reviews.length === 0 ? (
-              <p className="text-muted-foreground text-center py-6">
-                No reviews yet. Be the first to review!
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {reviews.map((review) => (
-                  <div key={review.id} className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`w-4 h-4 ${
-                              star <= review.rating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(review.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {review.review_text && (
-                      <p className="text-sm">{review.review_text}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+         {/* Reviews Section */}
+         <VendorReviews vendorId={id!} />
       </div>
     </div>
   );

@@ -23,6 +23,13 @@ export const VendorCard = ({ vendor }: VendorCardProps) => {
                 {vendor.business_type}
               </Badge>
             )}
+            {vendor.average_rating > 0 && (
+              <div className="flex items-center gap-1 text-sm mt-2">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-medium">{vendor.average_rating.toFixed(1)}</span>
+                <span className="text-muted-foreground">({vendor.total_reviews} reviews)</span>
+              </div>
+            )}
           </div>
           {vendor.logo_url && (
             <img

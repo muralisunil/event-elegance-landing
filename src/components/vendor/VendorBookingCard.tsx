@@ -1,10 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, DollarSign, MessageSquare, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, DollarSign, MessageSquare, CheckCircle, XCircle, Star } from "lucide-react";
 import { useVendorBookings } from "@/hooks/useVendorBookings";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { VendorMessagingDialog } from "./VendorMessagingDialog";
+import { ReviewVendorDialog } from "./ReviewVendorDialog";
+import { useVendorReviews } from "@/hooks/useVendorReviews";
 
 interface VendorBookingCardProps {
   booking: any;
@@ -21,8 +23,20 @@ const statusColors: Record<string, string> = {
 
 export const VendorBookingCard = ({ booking, userType }: VendorBookingCardProps) => {
   const { updateBookingStatus } = useVendorBookings(userType);
+  const { checkCanReview } = useVendorReviews();
   const [updating, setUpdating] = useState(false);
   const [messagingOpen, setMessagingOpen] = useState(false);
+  const [canReview, setCanReview] = useState(false);
+
+  useEffect(() => {
+    const checkReviewStatus = async () => {
+      if (userType === 'organizer' && booking.status === 'completed') {
+        const result = await checkCanReview(booking.id);
+        setCanReview(result);
+      }
+    };
+    checkReviewStatus();
+  }, [booking.id, booking.status, userType, checkCanReview]);
 
   const handleStatusUpdate = async (status: string) => {
     setUpdating(true);
@@ -125,6 +139,20 @@ export const VendorBookingCard = ({ booking, userType }: VendorBookingCardProps)
               >
                 Mark Complete
               </Button>
+            )}
+
+            {userType === 'organizer' && booking.status === 'completed' && canReview && (
+              <ReviewVendorDialog
+                vendorId={booking.vendor_id}
+                bookingId={booking.id}
+                vendorName={booking.vendor?.business_name || 'Vendor'}
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Star className="w-4 h-4 mr-2" />
+                    Write Review
+                  </Button>
+                }
+              />
             )}
           </div>
         </CardContent>

@@ -9,6 +9,7 @@ import { VendorBookingsTab } from "@/components/vendor/VendorBookingsTab";
 import { VendorAnalyticsDashboard } from "@/components/vendor/VendorAnalyticsDashboard";
 import { VendorServicesManager } from "@/components/vendor/VendorServicesManager";
 import { VendorPortfolioManager } from "@/components/vendor/VendorPortfolioManager";
+import { VendorReviewManagement } from "@/components/vendor/VendorReviewManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { 
@@ -147,12 +148,13 @@ const VendorDashboard = () => {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -240,6 +242,10 @@ const VendorDashboard = () => {
 
           <TabsContent value="portfolio" className="space-y-4">
             <VendorPortfolioManager vendorId={vendor.id} userId={session?.user?.id || ''} />
+          </TabsContent>
+
+          <TabsContent value="reviews" className="space-y-4">
+            <VendorReviewManagement vendorId={vendor.id} />
           </TabsContent>
         </Tabs>
       </div>

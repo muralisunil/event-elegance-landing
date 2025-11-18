@@ -19,6 +19,8 @@ export interface Vendor {
   postal_code: string | null;
   is_verified: boolean;
   is_active: boolean;
+  average_rating: number;
+  total_reviews: number;
   created_at: string;
 }
 
