@@ -10,6 +10,8 @@ import { VendorAnalyticsDashboard } from "@/components/vendor/VendorAnalyticsDas
 import { VendorServicesManager } from "@/components/vendor/VendorServicesManager";
 import { VendorPortfolioManager } from "@/components/vendor/VendorPortfolioManager";
 import { VendorReviewManagement } from "@/components/vendor/VendorReviewManagement";
+import { VendorAvailabilityCalendar } from "@/components/vendor/VendorAvailabilityCalendar";
+import { VendorNotificationSettings } from "@/components/vendor/VendorNotificationSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { 
@@ -148,13 +150,15 @@ const VendorDashboard = () => {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="availability">Availability</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -244,10 +248,18 @@ const VendorDashboard = () => {
             <VendorPortfolioManager vendorId={vendor.id} userId={session?.user?.id || ''} />
           </TabsContent>
 
-          <TabsContent value="reviews" className="space-y-4">
-            <VendorReviewManagement vendorId={vendor.id} />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="reviews" className="space-y-4">
+              <VendorReviewManagement vendorId={vendor.id} />
+            </TabsContent>
+
+            <TabsContent value="availability" className="space-y-4">
+              <VendorAvailabilityCalendar vendorId={vendor.id} canEdit={true} />
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-4">
+              <VendorNotificationSettings vendorId={vendor.id} />
+            </TabsContent>
+          </Tabs>
       </div>
     </div>
   );

@@ -7,6 +7,9 @@ import { useState, useEffect } from "react";
 import { VendorMessagingDialog } from "./VendorMessagingDialog";
 import { ReviewVendorDialog } from "./ReviewVendorDialog";
 import { useVendorReviews } from "@/hooks/useVendorReviews";
+import { ContractUploadDialog } from "./ContractUploadDialog";
+import { useContractManagement } from "@/hooks/useContractManagement";
+import { FileText, Download, FileCheck } from "lucide-react";
 
 interface VendorBookingCardProps {
   booking: any;
@@ -27,6 +30,8 @@ export const VendorBookingCard = ({ booking, userType }: VendorBookingCardProps)
   const [updating, setUpdating] = useState(false);
   const [messagingOpen, setMessagingOpen] = useState(false);
   const [canReview, setCanReview] = useState(false);
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const { downloadContract, signContract } = useContractManagement();
 
   useEffect(() => {
     const checkReviewStatus = async () => {
@@ -97,6 +102,46 @@ export const VendorBookingCard = ({ booking, userType }: VendorBookingCardProps)
             </div>
           )}
 
+          {/* Contract Information */}
+          {booking.contract_url && (
+            <div className="space-y-2 border-t pt-4">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Contract
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="text-sm">
+                  {booking.contract_signed_at ? (
+                    <span className="flex items-center gap-2 text-green-600">
+                      <FileCheck className="w-4 h-4" />
+                      Signed on {new Date(booking.contract_signed_at).toLocaleDateString()}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Pending signature</span>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => downloadContract(booking.contract_url)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+              {!booking.contract_signed_at && userType === 'vendor' && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => signContract(booking.id)}
+                  className="w-full"
+                >
+                  Sign Contract
+                </Button>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2 pt-2">
             <Button
               variant="outline"
@@ -154,6 +199,17 @@ export const VendorBookingCard = ({ booking, userType }: VendorBookingCardProps)
                 }
               />
             )}
+
+            {userType === 'organizer' && booking.status === 'accepted' && !booking.contract_url && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setContractDialogOpen(true)}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Upload Contract
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -163,6 +219,11 @@ export const VendorBookingCard = ({ booking, userType }: VendorBookingCardProps)
         userType={userType}
         open={messagingOpen}
         onOpenChange={setMessagingOpen}
+      />
+      <ContractUploadDialog
+        open={contractDialogOpen}
+        onOpenChange={setContractDialogOpen}
+        bookingId={booking.id}
       />
     </>
   );
