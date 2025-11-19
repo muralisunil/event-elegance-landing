@@ -1155,6 +1155,10 @@ export type Database = {
       event_vendor_bookings: {
         Row: {
           contract_amount: number | null
+          contract_expires_at: string | null
+          contract_signed_at: string | null
+          contract_uploaded_at: string | null
+          contract_url: string | null
           created_at: string
           event_date: string
           event_id: string
@@ -1171,6 +1175,10 @@ export type Database = {
         }
         Insert: {
           contract_amount?: number | null
+          contract_expires_at?: string | null
+          contract_signed_at?: string | null
+          contract_uploaded_at?: string | null
+          contract_url?: string | null
           created_at?: string
           event_date: string
           event_id: string
@@ -1187,6 +1195,10 @@ export type Database = {
         }
         Update: {
           contract_amount?: number | null
+          contract_expires_at?: string | null
+          contract_signed_at?: string | null
+          contract_uploaded_at?: string | null
+          contract_url?: string | null
           created_at?: string
           event_date?: string
           event_id?: string
@@ -2743,6 +2755,50 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "event_vendor_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_notification_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          notify_booking_requests: boolean | null
+          notify_booking_updates: boolean | null
+          notify_messages: boolean | null
+          notify_payment_updates: boolean | null
+          notify_reviews: boolean | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notify_booking_requests?: boolean | null
+          notify_booking_updates?: boolean | null
+          notify_messages?: boolean | null
+          notify_payment_updates?: boolean | null
+          notify_reviews?: boolean | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notify_booking_requests?: boolean | null
+          notify_booking_updates?: boolean | null
+          notify_messages?: boolean | null
+          notify_payment_updates?: boolean | null
+          notify_reviews?: boolean | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_notification_preferences_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: true
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
