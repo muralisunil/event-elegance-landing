@@ -29,6 +29,8 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import VendorDirectory from "./pages/VendorDirectory";
 import VendorDetail from "./pages/VendorDetail";
+import VenueBrowse from "./pages/VenueBrowse";
+import VenueDetail from "./pages/VenueDetail";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,8 @@ const App = () => (
           <Route path="/vendor/profile" element={<VendorProfile />} />
           <Route path="/vendors" element={<VendorDirectory />} />
           <Route path="/vendors/:id" element={<VendorDetail />} />
+          <Route path="/venues" element={<VenueBrowse />} />
+          <Route path="/venues/:id" element={<VenueDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

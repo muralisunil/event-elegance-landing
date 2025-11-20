@@ -3046,6 +3046,270 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_amenities: {
+        Row: {
+          amenity_name: string
+          amenity_type: string
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean
+          venue_id: string
+        }
+        Insert: {
+          amenity_name: string
+          amenity_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          venue_id: string
+        }
+        Update: {
+          amenity_name?: string
+          amenity_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_amenities_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_halls: {
+        Row: {
+          capacity: number
+          created_at: string
+          description: string | null
+          dimensions_height: number | null
+          dimensions_length: number
+          dimensions_width: number
+          hall_name: string
+          has_lobby: boolean
+          has_stage: boolean
+          id: string
+          is_available: boolean
+          layout_type: string
+          lobby_dimensions: string | null
+          pricing_per_day: number | null
+          stage_position: string | null
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          description?: string | null
+          dimensions_height?: number | null
+          dimensions_length: number
+          dimensions_width: number
+          hall_name: string
+          has_lobby?: boolean
+          has_stage?: boolean
+          id?: string
+          is_available?: boolean
+          layout_type: string
+          lobby_dimensions?: string | null
+          pricing_per_day?: number | null
+          stage_position?: string | null
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          description?: string | null
+          dimensions_height?: number | null
+          dimensions_length?: number
+          dimensions_width?: number
+          hall_name?: string
+          has_lobby?: boolean
+          has_stage?: boolean
+          id?: string
+          is_available?: boolean
+          layout_type?: string
+          lobby_dimensions?: string | null
+          pricing_per_day?: number | null
+          stage_position?: string | null
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_halls_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_images: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number
+          hall_id: string | null
+          id: string
+          image_type: string
+          image_url: string
+          is_primary: boolean
+          venue_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          hall_id?: string | null
+          id?: string
+          image_type: string
+          image_url: string
+          is_primary?: boolean
+          venue_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          hall_id?: string | null
+          id?: string
+          image_type?: string
+          image_url?: string
+          is_primary?: boolean
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_images_hall_id_fkey"
+            columns: ["hall_id"]
+            isOneToOne: false
+            referencedRelation: "venue_halls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_images_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_obstructions: {
+        Row: {
+          created_at: string
+          description: string | null
+          dimensions: string | null
+          hall_id: string
+          id: string
+          obstruction_type: string
+          position_data: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dimensions?: string | null
+          hall_id: string
+          id?: string
+          obstruction_type: string
+          position_data: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dimensions?: string | null
+          hall_id?: string
+          id?: string
+          obstruction_type?: string
+          position_data?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_obstructions_hall_id_fkey"
+            columns: ["hall_id"]
+            isOneToOne: false
+            referencedRelation: "venue_halls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venues: {
+        Row: {
+          address: string
+          city: string
+          contact_email: string
+          contact_person: string
+          contact_phone: string | null
+          country: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          name: string
+          postal_code: string | null
+          pricing_info: string | null
+          state: string | null
+          total_capacity: number | null
+          updated_at: string
+          venue_type: string
+          website: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          contact_email: string
+          contact_person: string
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          postal_code?: string | null
+          pricing_info?: string | null
+          state?: string | null
+          total_capacity?: number | null
+          updated_at?: string
+          venue_type?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          contact_email?: string
+          contact_person?: string
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          postal_code?: string | null
+          pricing_info?: string | null
+          state?: string | null
+          total_capacity?: number | null
+          updated_at?: string
+          venue_type?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
