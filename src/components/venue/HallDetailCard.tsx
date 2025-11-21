@@ -2,11 +2,13 @@ import { VenueHall } from "@/hooks/useVenueDetails";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Maximize2, Users, DollarSign, Layers, MapPin, 
-  LayoutGrid, Square, Pencil 
+  LayoutGrid, Square, Pencil, Eye 
 } from "lucide-react";
 import { HallLayoutVisualizer } from "./HallLayoutVisualizer";
+import { HallLayoutEditor } from "./HallLayoutEditor";
 import { Button } from "@/components/ui/button";
 
 interface HallDetailCardProps {
@@ -179,13 +181,33 @@ export const HallDetailCard = ({ hall, obstructions = [] }: HallDetailCardProps)
 
         <Separator />
 
-        {/* Visual Layout */}
-        <HallLayoutVisualizer hall={hall} obstructions={hallObstructions} />
-
-        {/* Action Button */}
-        <Button className="w-full" variant="outline">
-          View Detailed Floor Plan
-        </Button>
+        {/* Visual Layout with Tabs */}
+        <div>
+          <h4 className="text-sm font-semibold mb-3">Hall Layout</h4>
+          <Tabs defaultValue="preview" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="preview">
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </TabsTrigger>
+              <TabsTrigger value="editor">
+                <Pencil className="w-4 h-4 mr-2" />
+                Interactive Editor
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="preview" className="mt-4">
+              <HallLayoutVisualizer hall={hall} obstructions={hallObstructions} />
+            </TabsContent>
+            <TabsContent value="editor" className="mt-4">
+              <HallLayoutEditor
+                hallId={hall.id}
+                hallWidth={hall.dimensions_width}
+                hallLength={hall.dimensions_length}
+                existingLayout={null}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </CardContent>
     </Card>
   );

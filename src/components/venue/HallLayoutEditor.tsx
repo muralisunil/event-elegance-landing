@@ -5,6 +5,10 @@ import { LayoutEditorToolbar } from "./LayoutEditorToolbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+interface ExtendedFabricObject extends FabricObject {
+  isGridLine?: boolean;
+}
+
 interface HallLayoutEditorProps {
   hallId: string;
   hallWidth: number;
@@ -90,7 +94,8 @@ export const HallLayoutEditor = ({
       // Remove existing grid lines
       const objects = fabricCanvas.getObjects();
       objects.forEach((obj) => {
-        if (obj.name === "grid-line") {
+        const extObj = obj as ExtendedFabricObject;
+        if (extObj.isGridLine) {
           fabricCanvas.remove(obj);
         }
       });
@@ -106,8 +111,8 @@ export const HallLayoutEditor = ({
           opacity: 0.3,
           selectable: false,
           evented: false,
-          name: "grid-line",
-        });
+        }) as ExtendedFabricObject;
+        line.isGridLine = true;
         fabricCanvas.add(line);
         fabricCanvas.sendObjectToBack(line);
       }
@@ -123,8 +128,8 @@ export const HallLayoutEditor = ({
           opacity: 0.3,
           selectable: false,
           evented: false,
-          name: "grid-line",
-        });
+        }) as ExtendedFabricObject;
+        line.isGridLine = true;
         fabricCanvas.add(line);
         fabricCanvas.sendObjectToBack(line);
       }
@@ -224,7 +229,7 @@ export const HallLayoutEditor = ({
       let lastPosY = 0;
 
       fabricCanvas.on("mouse:down", function (opt) {
-        const evt = opt.e;
+        const evt = opt.e as MouseEvent;
         isDragging = true;
         lastPosX = evt.clientX;
         lastPosY = evt.clientY;
@@ -233,7 +238,7 @@ export const HallLayoutEditor = ({
 
       fabricCanvas.on("mouse:move", function (opt) {
         if (isDragging) {
-          const evt = opt.e;
+          const evt = opt.e as MouseEvent;
           const vpt = fabricCanvas.viewportTransform;
           if (vpt) {
             vpt[4] += evt.clientX - lastPosX;
@@ -268,21 +273,20 @@ export const HallLayoutEditor = ({
     toast.success("Object rotated");
   };
 
-  const duplicateSelected = () => {
+  const duplicateSelected = async () => {
     if (!fabricCanvas) return;
     const activeObject = fabricCanvas.getActiveObject();
     if (!activeObject) return;
 
-    activeObject.clone((cloned: FabricObject) => {
-      cloned.set({
-        left: (cloned.left || 0) + 20,
-        top: (cloned.top || 0) + 20,
-      });
-      fabricCanvas.add(cloned);
-      fabricCanvas.setActiveObject(cloned);
-      fabricCanvas.renderAll();
-      toast.success("Object duplicated");
+    const cloned = await activeObject.clone();
+    cloned.set({
+      left: (cloned.left || 0) + 20,
+      top: (cloned.top || 0) + 20,
     });
+    fabricCanvas.add(cloned);
+    fabricCanvas.setActiveObject(cloned);
+    fabricCanvas.renderAll();
+    toast.success("Object duplicated");
   };
 
   const saveLayout = async () => {
@@ -292,6 +296,7 @@ export const HallLayoutEditor = ({
     try {
       const layoutData = fabricCanvas.toJSON();
       
+      // @ts-ignore - custom_layout_data column exists but types haven't refreshed yet
       const { error } = await supabase
         .from("venue_halls")
         .update({ custom_layout_data: JSON.stringify(layoutData) })
