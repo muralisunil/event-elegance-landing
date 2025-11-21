@@ -9,14 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { 
   Building2, MapPin, Phone, Mail, Globe, Users, 
-  ArrowLeft, DollarSign, Maximize2, Check 
+  ArrowLeft, LayoutGrid 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HallDetailCard } from "@/components/venue/HallDetailCard";
 
 const VenueDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { venue, halls, amenities, loading } = useVenueDetails(id);
+  const { venue, halls, amenities, obstructions, loading } = useVenueDetails(id);
 
   if (loading) {
     return (
@@ -86,99 +87,80 @@ const VenueDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Halls */}
+              {/* Halls with Tabs */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Available Halls ({halls.length})</CardTitle>
-                  <CardDescription>Choose from our variety of event spaces</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <LayoutGrid className="h-5 w-5" />
+                        Available Halls ({halls.length})
+                      </CardTitle>
+                      <CardDescription>Explore detailed layouts and configurations</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {halls.map((hall) => (
-                      <Card key={hall.id} className="border-2">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className="text-xl">{hall.hall_name}</CardTitle>
-                              <CardDescription className="mt-2">
-                                {hall.description || "Versatile event space"}
-                              </CardDescription>
-                            </div>
-                            <Badge variant={
-                              hall.layout_type === 'fixed' ? 'default' :
-                              hall.layout_type === 'configurable' ? 'secondary' : 'outline'
-                            }>
-                              {hall.layout_type.charAt(0).toUpperCase() + hall.layout_type.slice(1)} Layout
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-muted-foreground mb-1">Dimensions</p>
-                              <p className="font-semibold flex items-center gap-1">
-                                <Maximize2 className="h-4 w-4" />
-                                {hall.dimensions_length}' × {hall.dimensions_width}'
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground mb-1">Capacity</p>
-                              <p className="font-semibold flex items-center gap-1">
-                                <Users className="h-4 w-4" />
-                                {hall.capacity} guests
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground mb-1">Stage</p>
-                              <p className="font-semibold">
-                                {hall.has_stage ? "Included" : "Not Available"}
-                              </p>
-                            </div>
-                            {hall.pricing_per_day && (
-                              <div>
-                                <p className="text-muted-foreground mb-1">Price/Day</p>
-                                <p className="font-semibold flex items-center gap-1">
-                                  <DollarSign className="h-4 w-4" />
-                                  {hall.pricing_per_day}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                          {hall.has_lobby && (
-                            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                              <p className="text-sm font-medium">✨ Includes Lobby Space</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  {halls.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No halls available</p>
+                  ) : halls.length === 1 ? (
+                    <HallDetailCard hall={halls[0]} obstructions={obstructions} />
+                  ) : (
+                    <Tabs defaultValue={halls[0]?.id} className="w-full">
+                      <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto">
+                        {halls.map((hall) => (
+                          <TabsTrigger key={hall.id} value={hall.id} className="flex-shrink-0">
+                            {hall.hall_name}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                      {halls.map((hall) => (
+                        <TabsContent key={hall.id} value={hall.id} className="mt-6">
+                          <HallDetailCard hall={hall} obstructions={obstructions} />
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  )}
                 </CardContent>
               </Card>
 
               {/* Amenities */}
-              {amenities.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Amenities & Services</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Amenities & Services</CardTitle>
+                  <CardDescription>
+                    {amenities.length > 0 
+                      ? `${amenities.length} amenities available` 
+                      : "Venue amenities information"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {amenities.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {amenities.map((amenity) => (
-                        <div key={amenity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                          <Check className="h-5 w-5 text-primary mt-0.5" />
-                          <div>
+                        <div key={amenity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="h-2 w-2 rounded-full bg-primary" />
+                          </div>
+                          <div className="flex-1">
                             <p className="font-medium">{amenity.amenity_name}</p>
+                            <Badge variant="outline" className="text-xs mt-1">
+                              {amenity.amenity_type}
+                            </Badge>
                             {amenity.description && (
-                              <p className="text-sm text-muted-foreground">{amenity.description}</p>
+                              <p className="text-sm text-muted-foreground mt-1">{amenity.description}</p>
                             )}
                           </div>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  ) : (
+                    <p className="text-center text-muted-foreground py-4">
+                      Contact venue for amenity information
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Sidebar */}

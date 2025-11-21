@@ -41,11 +41,21 @@ export interface VenueImage {
   is_primary: boolean;
 }
 
+export interface VenueObstruction {
+  id: string;
+  hall_id: string;
+  obstruction_type: string;
+  position_data: string; // JSON string with x, y coordinates
+  dimensions: string | null; // JSON string with width, height
+  description: string | null;
+}
+
 export const useVenueDetails = (venueId: string | undefined) => {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [halls, setHalls] = useState<VenueHall[]>([]);
   const [amenities, setAmenities] = useState<VenueAmenity[]>([]);
   const [images, setImages] = useState<VenueImage[]>([]);
+  const [obstructions, setObstructions] = useState<VenueObstruction[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -102,6 +112,15 @@ export const useVenueDetails = (venueId: string | undefined) => {
       if (imagesError) throw imagesError;
       setImages(imagesData || []);
 
+      // Fetch obstructions for all halls
+      const { data: obstructionsData, error: obstructionsError } = await supabase
+        .from('venue_obstructions')
+        .select('*')
+        .in('hall_id', (hallsData as VenueHall[])?.map(h => h.id) || []);
+
+      if (obstructionsError) throw obstructionsError;
+      setObstructions(obstructionsData || []);
+
     } catch (error: any) {
       console.error('Error fetching venue details:', error);
       toast({
@@ -114,5 +133,5 @@ export const useVenueDetails = (venueId: string | undefined) => {
     }
   };
 
-  return { venue, halls, amenities, images, loading, refetch: fetchVenueDetails };
+  return { venue, halls, amenities, images, obstructions, loading, refetch: fetchVenueDetails };
 };
