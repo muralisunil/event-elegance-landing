@@ -3088,6 +3088,7 @@ export type Database = {
         Row: {
           capacity: number
           created_at: string
+          custom_layout_data: string | null
           description: string | null
           dimensions_height: number | null
           dimensions_length: number
@@ -3107,6 +3108,7 @@ export type Database = {
         Insert: {
           capacity: number
           created_at?: string
+          custom_layout_data?: string | null
           description?: string | null
           dimensions_height?: number | null
           dimensions_length: number
@@ -3126,6 +3128,7 @@ export type Database = {
         Update: {
           capacity?: number
           created_at?: string
+          custom_layout_data?: string | null
           description?: string | null
           dimensions_height?: number | null
           dimensions_length?: number
