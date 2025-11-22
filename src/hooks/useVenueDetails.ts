@@ -19,6 +19,7 @@ export interface VenueHall {
   lobby_dimensions: string | null;
   pricing_per_day: number | null;
   is_available: boolean;
+  custom_layout_data: string | null;
 }
 
 export interface VenueAmenity {
