@@ -5,11 +5,13 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Maximize2, Users, DollarSign, Layers, MapPin, 
-  LayoutGrid, Square, Pencil, Eye 
+  LayoutGrid, Square, Pencil, Eye, Store
 } from "lucide-react";
 import { HallLayoutVisualizer } from "./HallLayoutVisualizer";
 import { HallLayoutEditor } from "./HallLayoutEditor";
+import { LobbyBoothEditor } from "./LobbyBoothEditor";
 import { Button } from "@/components/ui/button";
+import { useVenueLobbyAreas } from "@/hooks/useVenueLobbyAreas";
 
 interface HallDetailCardProps {
   hall: VenueHall;
@@ -24,6 +26,8 @@ interface HallDetailCardProps {
 
 export const HallDetailCard = ({ hall, obstructions = [] }: HallDetailCardProps) => {
   const hallObstructions = obstructions.filter(o => o.hall_id === hall.id);
+  const { data: lobbyAreas } = useVenueLobbyAreas(hall.venue_id);
+  const lobbyArea = hall.has_lobby && lobbyAreas && lobbyAreas.length > 0 ? lobbyAreas[0] : null;
   
   const getLayoutIcon = () => {
     switch (hall.layout_type) {
@@ -185,7 +189,7 @@ export const HallDetailCard = ({ hall, obstructions = [] }: HallDetailCardProps)
         <div>
           <h4 className="text-sm font-semibold mb-3">Hall Layout</h4>
           <Tabs defaultValue="preview" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className={`grid w-full ${hall.has_lobby ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="preview">
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
@@ -194,6 +198,12 @@ export const HallDetailCard = ({ hall, obstructions = [] }: HallDetailCardProps)
                 <Pencil className="w-4 h-4 mr-2" />
                 Interactive Editor
               </TabsTrigger>
+              {hall.has_lobby && (
+                <TabsTrigger value="lobby">
+                  <Store className="w-4 h-4 mr-2" />
+                  Lobby & Booths
+                </TabsTrigger>
+              )}
             </TabsList>
             <TabsContent value="preview" className="mt-4">
               <HallLayoutVisualizer hall={hall} obstructions={hallObstructions} />
@@ -209,6 +219,17 @@ export const HallDetailCard = ({ hall, obstructions = [] }: HallDetailCardProps)
                 obstructions={hallObstructions}
               />
             </TabsContent>
+            {hall.has_lobby && lobbyArea && (
+              <TabsContent value="lobby" className="mt-4">
+                <LobbyBoothEditor
+                  lobbyAreaId={lobbyArea.id}
+                  lobbyWidth={Number(hall.dimensions_width)}
+                  lobbyLength={Number(hall.dimensions_length)}
+                  existingLayout={lobbyArea.custom_booth_layout_data}
+                  onLayoutSaved={() => {}}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </CardContent>
