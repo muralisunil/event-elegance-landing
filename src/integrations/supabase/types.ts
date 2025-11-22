@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      event_booth_bookings: {
+        Row: {
+          booking_status: string | null
+          booth_id: string
+          created_at: string | null
+          event_id: string
+          id: string
+          notes: string | null
+          setup_requirements: string | null
+          updated_at: string | null
+          vendor_contact: string | null
+          vendor_name: string | null
+        }
+        Insert: {
+          booking_status?: string | null
+          booth_id: string
+          created_at?: string | null
+          event_id: string
+          id?: string
+          notes?: string | null
+          setup_requirements?: string | null
+          updated_at?: string | null
+          vendor_contact?: string | null
+          vendor_name?: string | null
+        }
+        Update: {
+          booking_status?: string | null
+          booth_id?: string
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          notes?: string | null
+          setup_requirements?: string | null
+          updated_at?: string | null
+          vendor_contact?: string | null
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_booth_bookings_booth_id_fkey"
+            columns: ["booth_id"]
+            isOneToOne: false
+            referencedRelation: "venue_booths"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_booth_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_buildings: {
         Row: {
           address: string | null
@@ -3084,6 +3138,56 @@ export type Database = {
           },
         ]
       }
+      venue_booths: {
+        Row: {
+          amenities: string[] | null
+          booth_number: string
+          created_at: string | null
+          dimensions: string | null
+          id: string
+          is_available: boolean | null
+          lobby_area_id: string
+          notes: string | null
+          position_data: string | null
+          rental_price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          booth_number: string
+          created_at?: string | null
+          dimensions?: string | null
+          id?: string
+          is_available?: boolean | null
+          lobby_area_id: string
+          notes?: string | null
+          position_data?: string | null
+          rental_price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          amenities?: string[] | null
+          booth_number?: string
+          created_at?: string | null
+          dimensions?: string | null
+          id?: string
+          is_available?: boolean | null
+          lobby_area_id?: string
+          notes?: string | null
+          position_data?: string | null
+          rental_price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_booths_lobby_area_id_fkey"
+            columns: ["lobby_area_id"]
+            isOneToOne: false
+            referencedRelation: "venue_lobby_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_halls: {
         Row: {
           capacity: number
@@ -3199,6 +3303,56 @@ export type Database = {
           },
           {
             foreignKeyName: "venue_images_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_lobby_areas: {
+        Row: {
+          amenities: string[] | null
+          created_at: string | null
+          custom_booth_layout_data: string | null
+          dimensions: string | null
+          id: string
+          location: string | null
+          max_booths: number | null
+          name: string
+          notes: string | null
+          updated_at: string | null
+          venue_id: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          created_at?: string | null
+          custom_booth_layout_data?: string | null
+          dimensions?: string | null
+          id?: string
+          location?: string | null
+          max_booths?: number | null
+          name: string
+          notes?: string | null
+          updated_at?: string | null
+          venue_id: string
+        }
+        Update: {
+          amenities?: string[] | null
+          created_at?: string | null
+          custom_booth_layout_data?: string | null
+          dimensions?: string | null
+          id?: string
+          location?: string | null
+          max_booths?: number | null
+          name?: string
+          notes?: string | null
+          updated_at?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_lobby_areas_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "venues"
