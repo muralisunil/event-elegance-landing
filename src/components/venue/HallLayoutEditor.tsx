@@ -130,7 +130,7 @@ export const HallLayoutEditor = ({
     return () => {
       canvas.dispose();
     };
-  }, [hallId, canvasWidth, canvasHeight, existingLayout]);
+  }, [hallId, canvasWidth, canvasHeight, existingLayout, stagePosition, hasStage, obstructions]);
 
   // Draw grid
   useEffect(() => {
