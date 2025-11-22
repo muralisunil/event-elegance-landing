@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Canvas as FabricCanvas, Rect, Circle, FabricObject } from "fabric";
+import { Canvas as FabricCanvas, Rect, Circle, FabricObject, Text } from "fabric";
 import { Card, CardContent } from "@/components/ui/card";
 import { LayoutEditorToolbar } from "./LayoutEditorToolbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { StageVisibilityCalculator } from "@/lib/stageVisibilityCalculator";
 
 interface ExtendedFabricObject extends FabricObject {
   isGridLine?: boolean;
+  isStage?: boolean;
+  isObstruction?: boolean;
+  visibilityLabel?: Text;
+  visibilityPercentage?: number;
 }
 
 interface HallLayoutEditorProps {
@@ -14,6 +19,15 @@ interface HallLayoutEditorProps {
   hallWidth: number;
   hallLength: number;
   existingLayout?: string | null;
+  stagePosition?: string | null;
+  hasStage?: boolean;
+  obstructions?: Array<{
+    id: string;
+    hall_id: string;
+    obstruction_type: string;
+    position_data: string;
+    dimensions: string | null;
+  }>;
   onLayoutSaved?: () => void;
 }
 
@@ -22,6 +36,9 @@ export const HallLayoutEditor = ({
   hallWidth,
   hallLength,
   existingLayout,
+  stagePosition = null,
+  hasStage = false,
+  obstructions = [],
   onLayoutSaved,
 }: HallLayoutEditorProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,6 +48,7 @@ export const HallLayoutEditor = ({
   const [hasSelection, setHasSelection] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const visibilityCalculatorRef = useRef<StageVisibilityCalculator | null>(null);
 
   const GRID_SIZE = 20;
   const SCALE_FACTOR = 5; // 5 pixels per foot
@@ -47,7 +65,17 @@ export const HallLayoutEditor = ({
       selection: true,
     });
 
-    // Enable object snapping to grid
+    // Initialize visibility calculator
+    visibilityCalculatorRef.current = new StageVisibilityCalculator(
+      hallWidth,
+      hallLength,
+      stagePosition,
+      hasStage,
+      obstructions,
+      SCALE_FACTOR
+    );
+
+    // Enable object snapping to grid and update visibility
     canvas.on("object:moving", (e) => {
       if (gridEnabled && e.target) {
         e.target.set({
@@ -55,6 +83,11 @@ export const HallLayoutEditor = ({
           top: Math.round((e.target.top || 0) / GRID_SIZE) * GRID_SIZE,
         });
       }
+      updateVisibilityForObject(e.target as ExtendedFabricObject);
+    });
+
+    canvas.on("object:modified", (e) => {
+      updateVisibilityForObject(e.target as ExtendedFabricObject);
     });
 
     // Track selection
@@ -62,11 +95,27 @@ export const HallLayoutEditor = ({
     canvas.on("selection:updated", () => setHasSelection(true));
     canvas.on("selection:cleared", () => setHasSelection(false));
 
+    // Draw stage if present
+    if (hasStage && stagePosition) {
+      drawStage(canvas);
+    }
+
+    // Draw obstructions
+    drawObstructions(canvas);
+
     // Load existing layout if available
     if (existingLayout) {
       try {
         const layoutData = JSON.parse(existingLayout);
         canvas.loadFromJSON(layoutData, () => {
+          // Update visibility for all loaded objects
+          const objects = canvas.getObjects();
+          objects.forEach((obj) => {
+            const extObj = obj as ExtendedFabricObject;
+            if (!extObj.isGridLine && !extObj.isStage && !extObj.isObstruction) {
+              updateVisibilityForObject(extObj);
+            }
+          });
           canvas.renderAll();
           toast.success("Layout loaded successfully");
         });
@@ -140,6 +189,161 @@ export const HallLayoutEditor = ({
     drawGrid();
   }, [fabricCanvas, gridEnabled]);
 
+  const drawStage = (canvas: FabricCanvas) => {
+    if (!stagePosition) return;
+
+    const width = canvas.width || 0;
+    const height = canvas.height || 0;
+    const stageDepth = 60;
+    const stageWidth = Math.min(width * 0.6, 300);
+
+    let stageRect: Rect;
+    switch (stagePosition) {
+      case 'front':
+        stageRect = new Rect({
+          left: (width - stageWidth) / 2,
+          top: 10,
+          width: stageWidth,
+          height: stageDepth,
+          fill: "hsl(var(--accent))",
+          stroke: "hsl(var(--accent-foreground))",
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          opacity: 0.7,
+        });
+        break;
+      case 'back':
+        stageRect = new Rect({
+          left: (width - stageWidth) / 2,
+          top: height - stageDepth - 10,
+          width: stageWidth,
+          height: stageDepth,
+          fill: "hsl(var(--accent))",
+          stroke: "hsl(var(--accent-foreground))",
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          opacity: 0.7,
+        });
+        break;
+      case 'left':
+        stageRect = new Rect({
+          left: 10,
+          top: (height - stageWidth) / 2,
+          width: stageDepth,
+          height: stageWidth,
+          fill: "hsl(var(--accent))",
+          stroke: "hsl(var(--accent-foreground))",
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          opacity: 0.7,
+        });
+        break;
+      case 'right':
+        stageRect = new Rect({
+          left: width - stageDepth - 10,
+          top: (height - stageWidth) / 2,
+          width: stageDepth,
+          height: stageWidth,
+          fill: "hsl(var(--accent))",
+          stroke: "hsl(var(--accent-foreground))",
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          opacity: 0.7,
+        });
+        break;
+      default:
+        return;
+    }
+
+    const extStageRect = stageRect as ExtendedFabricObject;
+    extStageRect.isStage = true;
+    canvas.add(stageRect);
+
+    const stageLabel = new Text("STAGE", {
+      left: (stageRect.left || 0) + (stageRect.width || 0) / 2,
+      top: (stageRect.top || 0) + (stageRect.height || 0) / 2,
+      fontSize: 14,
+      fontWeight: "bold",
+      fill: "hsl(var(--accent-foreground))",
+      originX: "center",
+      originY: "center",
+      selectable: false,
+      evented: false,
+    });
+    canvas.add(stageLabel);
+  };
+
+  const drawObstructions = (canvas: FabricCanvas) => {
+    obstructions.forEach((obs) => {
+      try {
+        const position = JSON.parse(obs.position_data);
+        const dimensions = obs.dimensions ? JSON.parse(obs.dimensions) : null;
+
+        if (!dimensions) return;
+
+        const obstruction = new Rect({
+          left: (position.x || 0) * SCALE_FACTOR,
+          top: (position.y || 0) * SCALE_FACTOR,
+          width: (dimensions.width || 20) * SCALE_FACTOR,
+          height: (dimensions.height || 20) * SCALE_FACTOR,
+          fill: "hsl(var(--muted-foreground))",
+          stroke: "hsl(var(--border))",
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          opacity: 0.5,
+        }) as ExtendedFabricObject;
+
+        obstruction.isObstruction = true;
+        canvas.add(obstruction);
+      } catch (error) {
+        console.error("Error drawing obstruction:", error);
+      }
+    });
+  };
+
+  const updateVisibilityForObject = (obj: ExtendedFabricObject) => {
+    if (!visibilityCalculatorRef.current || !fabricCanvas) return;
+    if (obj.isGridLine || obj.isStage || obj.isObstruction) return;
+
+    const visibility = visibilityCalculatorRef.current.calculateVisibility(
+      obj.left || 0,
+      obj.top || 0,
+      obj.width || 80,
+      obj.height || 80
+    );
+
+    obj.visibilityPercentage = visibility;
+
+    // Remove old label if exists
+    if (obj.visibilityLabel) {
+      fabricCanvas.remove(obj.visibilityLabel);
+    }
+
+    // Create new visibility label
+    const label = new Text(`${visibility}%`, {
+      left: (obj.left || 0) + (obj.width || 80) / 2,
+      top: (obj.top || 0) + (obj.height || 80) / 2,
+      fontSize: 12,
+      fontWeight: "bold",
+      fill: "white",
+      backgroundColor: StageVisibilityCalculator.getVisibilityColor(visibility),
+      originX: "center",
+      originY: "center",
+      selectable: false,
+      evented: false,
+      padding: 4,
+    });
+
+    obj.visibilityLabel = label;
+    fabricCanvas.add(label);
+    fabricCanvas.renderAll();
+  };
+
   const addTable = () => {
     if (!fabricCanvas) return;
 
@@ -152,10 +356,11 @@ export const HallLayoutEditor = ({
       stroke: "hsl(var(--primary-foreground))",
       strokeWidth: 2,
       opacity: 0.8,
-    });
+    }) as ExtendedFabricObject;
 
     fabricCanvas.add(table);
     fabricCanvas.setActiveObject(table);
+    updateVisibilityForObject(table);
     fabricCanvas.renderAll();
     toast.success("Table added");
   };
@@ -171,10 +376,11 @@ export const HallLayoutEditor = ({
       stroke: "hsl(var(--secondary-foreground))",
       strokeWidth: 2,
       opacity: 0.8,
-    });
+    }) as ExtendedFabricObject;
 
     fabricCanvas.add(chair);
     fabricCanvas.setActiveObject(chair);
+    updateVisibilityForObject(chair);
     fabricCanvas.renderAll();
     toast.success("Chair added");
   };
@@ -186,6 +392,11 @@ export const HallLayoutEditor = ({
     if (activeObjects.length === 0) return;
 
     activeObjects.forEach((obj) => {
+      const extObj = obj as ExtendedFabricObject;
+      // Remove visibility label if exists
+      if (extObj.visibilityLabel) {
+        fabricCanvas.remove(extObj.visibilityLabel);
+      }
       fabricCanvas.remove(obj);
     });
 
@@ -275,16 +486,17 @@ export const HallLayoutEditor = ({
 
   const duplicateSelected = async () => {
     if (!fabricCanvas) return;
-    const activeObject = fabricCanvas.getActiveObject();
+    const activeObject = fabricCanvas.getActiveObject() as ExtendedFabricObject;
     if (!activeObject) return;
 
-    const cloned = await activeObject.clone();
+    const cloned = (await activeObject.clone()) as ExtendedFabricObject;
     cloned.set({
       left: (cloned.left || 0) + 20,
       top: (cloned.top || 0) + 20,
     });
     fabricCanvas.add(cloned);
     fabricCanvas.setActiveObject(cloned);
+    updateVisibilityForObject(cloned);
     fabricCanvas.renderAll();
     toast.success("Object duplicated");
   };
@@ -294,7 +506,24 @@ export const HallLayoutEditor = ({
 
     setIsSaving(true);
     try {
-      const layoutData = fabricCanvas.toJSON();
+      // Get all objects except grid lines, stage, obstructions, and labels
+      const objectsToSave = fabricCanvas.getObjects().filter((obj) => {
+        const extObj = obj as ExtendedFabricObject;
+        return !extObj.isGridLine && !extObj.isStage && !extObj.isObstruction && !(obj instanceof Text);
+      });
+
+      // Create a clean layout data structure
+      const layoutData = {
+        version: '5.3.0',
+        objects: objectsToSave.map(obj => {
+          const json = obj.toJSON();
+          const extObj = obj as ExtendedFabricObject;
+          return {
+            ...json,
+            visibilityPercentage: extObj.visibilityPercentage
+          };
+        })
+      };
       
       // @ts-ignore - custom_layout_data column exists but types haven't refreshed yet
       const { error } = await supabase
@@ -337,12 +566,30 @@ export const HallLayoutEditor = ({
           <div className="flex justify-center items-center overflow-auto">
             <canvas ref={canvasRef} className="border-2 border-border rounded-lg shadow-lg" />
           </div>
-          <div className="mt-4 text-sm text-muted-foreground text-center">
-            <p>
-              Hall dimensions: {hallLength}' × {hallWidth}' • 
-              {gridEnabled ? " Grid snapping enabled" : " Free placement"} • 
-              {panMode ? " Pan mode active" : " Selection mode"}
-            </p>
+          <div className="mt-4 space-y-2">
+            <div className="text-sm text-muted-foreground text-center">
+              <p>
+                Hall dimensions: {hallLength}' × {hallWidth}' • 
+                {gridEnabled ? " Grid snapping enabled" : " Free placement"} • 
+                {panMode ? " Pan mode active" : " Selection mode"}
+              </p>
+            </div>
+            {hasStage && (
+              <div className="flex items-center justify-center gap-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(90) }}></div>
+                  <span>Excellent (80-100%)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(65) }}></div>
+                  <span>Good (50-79%)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(30) }}></div>
+                  <span>Limited (&lt;50%)</span>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

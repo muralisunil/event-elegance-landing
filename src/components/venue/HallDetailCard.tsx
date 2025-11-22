@@ -203,7 +203,10 @@ export const HallDetailCard = ({ hall, obstructions = [] }: HallDetailCardProps)
                 hallId={hall.id}
                 hallWidth={hall.dimensions_width}
                 hallLength={hall.dimensions_length}
-                existingLayout={null}
+                existingLayout={hall.custom_layout_data}
+                stagePosition={hall.stage_position}
+                hasStage={hall.has_stage}
+                obstructions={hallObstructions}
               />
             </TabsContent>
           </Tabs>
