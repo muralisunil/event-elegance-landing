@@ -506,6 +506,88 @@ export type Database = {
           },
         ]
       }
+      event_hall_reservations: {
+        Row: {
+          cancelled_at: string | null
+          confirmed_at: string | null
+          cost: number | null
+          created_at: string | null
+          end_date: string
+          event_id: string
+          hall_id: string
+          id: string
+          notes: string | null
+          reservation_date: string
+          reservation_status: string | null
+          reserved_by: string
+          seating_layout_customization: Json | null
+          special_requirements: string | null
+          start_date: string
+          updated_at: string | null
+          venue_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          cost?: number | null
+          created_at?: string | null
+          end_date: string
+          event_id: string
+          hall_id: string
+          id?: string
+          notes?: string | null
+          reservation_date: string
+          reservation_status?: string | null
+          reserved_by: string
+          seating_layout_customization?: Json | null
+          special_requirements?: string | null
+          start_date: string
+          updated_at?: string | null
+          venue_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          cost?: number | null
+          created_at?: string | null
+          end_date?: string
+          event_id?: string
+          hall_id?: string
+          id?: string
+          notes?: string | null
+          reservation_date?: string
+          reservation_status?: string | null
+          reserved_by?: string
+          seating_layout_customization?: Json | null
+          special_requirements?: string | null
+          start_date?: string
+          updated_at?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_hall_reservations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_hall_reservations_hall_id_fkey"
+            columns: ["hall_id"]
+            isOneToOne: false
+            referencedRelation: "venue_halls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_hall_reservations_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_invitations: {
         Row: {
           created_at: string
@@ -1365,6 +1447,75 @@ export type Database = {
             columns: ["linked_sponsor_id"]
             isOneToOne: false
             referencedRelation: "event_sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_venue_bookings: {
+        Row: {
+          booked_by: string
+          booking_date: string
+          booking_status: string | null
+          cancelled_at: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          end_date: string
+          event_id: string
+          id: string
+          notes: string | null
+          special_requirements: string | null
+          start_date: string
+          total_cost: number | null
+          updated_at: string | null
+          venue_id: string
+        }
+        Insert: {
+          booked_by: string
+          booking_date: string
+          booking_status?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          end_date: string
+          event_id: string
+          id?: string
+          notes?: string | null
+          special_requirements?: string | null
+          start_date: string
+          total_cost?: number | null
+          updated_at?: string | null
+          venue_id: string
+        }
+        Update: {
+          booked_by?: string
+          booking_date?: string
+          booking_status?: string | null
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          end_date?: string
+          event_id?: string
+          id?: string
+          notes?: string | null
+          special_requirements?: string | null
+          start_date?: string
+          total_cost?: number | null
+          updated_at?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_venue_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_venue_bookings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]

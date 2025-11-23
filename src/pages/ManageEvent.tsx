@@ -17,6 +17,7 @@ import VendorsTab from "@/components/event/VendorsTab";
 import InvitationTab from "@/components/event/InvitationTab";
 import { FoodPlanningTab } from "@/components/event/FoodPlanningTab";
 import { TasksTab } from "@/components/event/tasks/TasksTab";
+import { EventVenueBookingsTab } from "@/components/event/EventVenueBookingsTab";
 import { getEventConfiguration, initializeDefaultConfiguration } from "@/lib/eventConfiguration";
 import { EventManagersSection } from "@/components/event/EventManagersSection";
 import { useEventPermissions } from "@/hooks/useEventPermissions";
@@ -146,6 +147,7 @@ const ManageEvent = () => {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="invitation">Invitation</TabsTrigger>
             {config?.feature_venues_enabled && <TabsTrigger value="venues">Venues</TabsTrigger>}
+            <TabsTrigger value="venue-bookings">Venue Bookings</TabsTrigger>
             {config?.feature_schedule_enabled && <TabsTrigger value="schedule">Schedule</TabsTrigger>}
             <TabsTrigger value="guests">Guests</TabsTrigger>
             {config?.feature_volunteers_enabled && <TabsTrigger value="volunteers">Volunteers</TabsTrigger>}
@@ -168,6 +170,10 @@ const ManageEvent = () => {
 
           <TabsContent value="venues">
             <BuildingRoomManager eventId={eventId!} />
+          </TabsContent>
+
+          <TabsContent value="venue-bookings">
+            <EventVenueBookingsTab eventId={eventId!} />
           </TabsContent>
 
           <TabsContent value="schedule">
