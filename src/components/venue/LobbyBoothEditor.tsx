@@ -81,7 +81,7 @@ export const LobbyBoothEditor = ({
     return () => {
       canvas.dispose();
     };
-  }, [lobbyAreaId, canvasWidth, canvasHeight, existingLayout, gridEnabled]);
+  }, [lobbyAreaId, canvasWidth, canvasHeight, existingLayout]);
 
   useEffect(() => {
     if (!fabricCanvas || !gridEnabled) return;
