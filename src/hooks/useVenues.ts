@@ -29,6 +29,8 @@ interface UseVenuesOptions {
   city?: string;
   state?: string;
   venueType?: string;
+  minCapacity?: number;
+  maxCapacity?: number;
 }
 
 export const useVenues = (options: UseVenuesOptions = {}) => {

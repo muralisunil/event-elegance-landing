@@ -9,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { 
   Building2, MapPin, Phone, Mail, Globe, Users, 
-  ArrowLeft, LayoutGrid 
+  ArrowLeft, LayoutGrid, BarChart3 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HallDetailCard } from "@/components/venue/HallDetailCard";
+import { VenueAnalyticsDashboard } from "@/components/venue/VenueAnalyticsDashboard";
 
 const VenueDetail = () => {
   const { id } = useParams();
@@ -75,17 +76,24 @@ const VenueDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>About This Venue</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    {venue.description || "A professional event venue with modern facilities and flexible spaces to accommodate your event needs."}
-                  </p>
-                </CardContent>
-              </Card>
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="overview" className="space-y-6 mt-6">
+                  {/* Overview */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>About This Venue</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">
+                        {venue.description || "A professional event venue with modern facilities and flexible spaces to accommodate your event needs."}
+                      </p>
+                    </CardContent>
+                  </Card>
 
               {/* Halls with Tabs */}
               <Card>
@@ -124,43 +132,49 @@ const VenueDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Amenities */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Amenities & Services</CardTitle>
-                  <CardDescription>
-                    {amenities.length > 0 
-                      ? `${amenities.length} amenities available` 
-                      : "Venue amenities information"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {amenities.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {amenities.map((amenity) => (
-                        <div key={amenity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                          <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <div className="h-2 w-2 rounded-full bg-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium">{amenity.amenity_name}</p>
-                            <Badge variant="outline" className="text-xs mt-1">
-                              {amenity.amenity_type}
-                            </Badge>
-                            {amenity.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{amenity.description}</p>
-                            )}
-                          </div>
+                  {/* Amenities */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Amenities & Services</CardTitle>
+                      <CardDescription>
+                        {amenities.length > 0 
+                          ? `${amenities.length} amenities available` 
+                          : "Venue amenities information"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {amenities.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {amenities.map((amenity) => (
+                            <div key={amenity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                              <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div className="h-2 w-2 rounded-full bg-primary" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{amenity.amenity_name}</p>
+                                <Badge variant="outline" className="text-xs mt-1">
+                                  {amenity.amenity_type}
+                                </Badge>
+                                {amenity.description && (
+                                  <p className="text-sm text-muted-foreground mt-1">{amenity.description}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-4">
-                      Contact venue for amenity information
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+                      ) : (
+                        <p className="text-center text-muted-foreground py-4">
+                          Contact venue for amenity information
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="analytics" className="mt-6">
+                  <VenueAnalyticsDashboard venueId={id!} />
+                </TabsContent>
+              </Tabs>
             </div>
 
             {/* Sidebar */}
