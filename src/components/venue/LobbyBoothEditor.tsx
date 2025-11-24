@@ -52,7 +52,7 @@ export const LobbyBoothEditor = ({
     const canvas = new FabricCanvas(canvasRef.current, {
       width: Math.min(canvasWidth, 1000),
       height: Math.min(canvasHeight, 600),
-      backgroundColor: "hsl(var(--muted))",
+      backgroundColor: "#f8f9fa",
       selection: true,
     });
 
@@ -119,7 +119,7 @@ export const LobbyBoothEditor = ({
           top: 0,
           width: 1,
           height: height,
-          fill: "hsl(var(--border))",
+          fill: "#e5e7eb",
           opacity: 0.3,
           selectable: false,
           evented: false,
@@ -135,7 +135,7 @@ export const LobbyBoothEditor = ({
           top: i,
           width: width,
           height: 1,
-          fill: "hsl(var(--border))",
+          fill: "#e5e7eb",
           opacity: 0.3,
           selectable: false,
           evented: false,
@@ -158,10 +158,10 @@ export const LobbyBoothEditor = ({
     const boothRect = new Rect({
       left: 100,
       top: 100,
-      fill: "hsl(var(--accent))",
+      fill: "#f59e0b",
       width: 100,
       height: 100,
-      stroke: "hsl(var(--accent-foreground))",
+      stroke: "#d97706",
       strokeWidth: 2,
       opacity: 0.8,
     }) as ExtendedFabricObject;
