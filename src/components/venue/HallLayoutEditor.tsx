@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Canvas as FabricCanvas, Rect, Circle, FabricObject, Text } from "fabric";
+import { Canvas as FabricCanvas, Rect, Circle, FabricObject, Text, Group } from "fabric";
 import { Card, CardContent } from "@/components/ui/card";
 import { LayoutEditorToolbar } from "./LayoutEditorToolbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StageVisibilityCalculator } from "@/lib/stageVisibilityCalculator";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface ExtendedFabricObject extends FabricObject {
   isGridLine?: boolean;
@@ -12,6 +15,11 @@ interface ExtendedFabricObject extends FabricObject {
   isObstruction?: boolean;
   visibilityLabel?: Text;
   visibilityPercentage?: number;
+  itemLabel?: Text;
+  itemType?: 'table' | 'chair' | 'row';
+  itemName?: string;
+  chairNumber?: string;
+  rowName?: string;
 }
 
 interface HallLayoutEditorProps {
@@ -49,6 +57,10 @@ export const HallLayoutEditor = ({
   const [zoom, setZoom] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const visibilityCalculatorRef = useRef<StageVisibilityCalculator | null>(null);
+  const [chairCounter, setChairCounter] = useState(1);
+  const [rowCounter, setRowCounter] = useState(1);
+  const [editingLabel, setEditingLabel] = useState(false);
+  const [labelInput, setLabelInput] = useState("");
 
   const GRID_SIZE = 20;
   const SCALE_FACTOR = 5; // 5 pixels per foot
@@ -83,7 +95,23 @@ export const HallLayoutEditor = ({
           top: Math.round((e.target.top || 0) / GRID_SIZE) * GRID_SIZE,
         });
       }
-      updateVisibilityForObject(e.target as ExtendedFabricObject);
+      const extObj = e.target as ExtendedFabricObject;
+      updateVisibilityForObject(extObj);
+      
+      // Update label position if it exists
+      if (extObj.itemLabel) {
+        if (extObj.itemType === 'chair') {
+          extObj.itemLabel.set({
+            left: extObj.left || 0,
+            top: extObj.top || 0,
+          });
+        } else if (extObj.itemType === 'row') {
+          extObj.itemLabel.set({
+            left: (extObj.left || 0) + (extObj.width || 0) / 2,
+            top: (extObj.top || 0) + (extObj.height || 0) / 2,
+          });
+        }
+      }
     });
 
     canvas.on("object:modified", (e) => {
@@ -347,27 +375,49 @@ export const HallLayoutEditor = ({
   const addTable = () => {
     if (!fabricCanvas) return;
 
+    const rowName = `Row ${rowCounter}`;
     const table = new Rect({
       left: 100,
       top: 100,
       fill: "hsl(var(--primary))",
-      width: 80,
-      height: 80,
+      width: 120,
+      height: 40,
       stroke: "hsl(var(--primary-foreground))",
       strokeWidth: 2,
       opacity: 0.8,
     }) as ExtendedFabricObject;
 
+    table.itemType = 'row';
+    table.rowName = rowName;
+
+    const label = new Text(rowName, {
+      left: 100 + 60,
+      top: 100 + 20,
+      fontSize: 14,
+      fontWeight: "bold",
+      fill: "white",
+      originX: "center",
+      originY: "center",
+      selectable: false,
+      evented: false,
+    });
+
+    table.itemLabel = label;
+
     fabricCanvas.add(table);
+    fabricCanvas.add(label);
     fabricCanvas.setActiveObject(table);
     updateVisibilityForObject(table);
     fabricCanvas.renderAll();
-    toast.success("Table added");
+    
+    setRowCounter(rowCounter + 1);
+    toast.success(`${rowName} added - Click to rename`);
   };
 
   const addChair = () => {
     if (!fabricCanvas) return;
 
+    const chairNumber = `${chairCounter}`;
     const chair = new Circle({
       left: 100,
       top: 100,
@@ -378,11 +428,31 @@ export const HallLayoutEditor = ({
       opacity: 0.8,
     }) as ExtendedFabricObject;
 
+    chair.itemType = 'chair';
+    chair.chairNumber = chairNumber;
+
+    const label = new Text(chairNumber, {
+      left: 100,
+      top: 100,
+      fontSize: 12,
+      fontWeight: "bold",
+      fill: "white",
+      originX: "center",
+      originY: "center",
+      selectable: false,
+      evented: false,
+    });
+
+    chair.itemLabel = label;
+
     fabricCanvas.add(chair);
+    fabricCanvas.add(label);
     fabricCanvas.setActiveObject(chair);
     updateVisibilityForObject(chair);
     fabricCanvas.renderAll();
-    toast.success("Chair added");
+    
+    setChairCounter(chairCounter + 1);
+    toast.success(`Chair #${chairNumber} added - Click to rename`);
   };
 
   const deleteSelected = () => {
@@ -397,12 +467,59 @@ export const HallLayoutEditor = ({
       if (extObj.visibilityLabel) {
         fabricCanvas.remove(extObj.visibilityLabel);
       }
+      // Remove item label if exists
+      if (extObj.itemLabel) {
+        fabricCanvas.remove(extObj.itemLabel);
+      }
       fabricCanvas.remove(obj);
     });
 
     fabricCanvas.discardActiveObject();
     fabricCanvas.renderAll();
     toast.success("Object(s) deleted");
+  };
+
+  const renameSelected = () => {
+    if (!fabricCanvas) return;
+    const activeObject = fabricCanvas.getActiveObject() as ExtendedFabricObject;
+    if (!activeObject || (!activeObject.itemType)) return;
+
+    const currentName = activeObject.itemType === 'chair' 
+      ? activeObject.chairNumber 
+      : activeObject.rowName;
+    
+    setLabelInput(currentName || "");
+    setEditingLabel(true);
+  };
+
+  const applyLabelChange = () => {
+    if (!fabricCanvas || !labelInput.trim()) {
+      setEditingLabel(false);
+      return;
+    }
+
+    const activeObject = fabricCanvas.getActiveObject() as ExtendedFabricObject;
+    if (!activeObject || !activeObject.itemType) {
+      setEditingLabel(false);
+      return;
+    }
+
+    // Update the item name
+    if (activeObject.itemType === 'chair') {
+      activeObject.chairNumber = labelInput;
+    } else if (activeObject.itemType === 'row') {
+      activeObject.rowName = labelInput;
+    }
+
+    // Update the label text
+    if (activeObject.itemLabel) {
+      activeObject.itemLabel.set({ text: labelInput });
+    }
+
+    fabricCanvas.renderAll();
+    toast.success(`Renamed to "${labelInput}"`);
+    setEditingLabel(false);
+    setLabelInput("");
   };
 
   const handleZoomIn = () => {
@@ -506,26 +623,30 @@ export const HallLayoutEditor = ({
 
     setIsSaving(true);
     try {
-      // Get all objects except grid lines, stage, obstructions, and labels
       const objectsToSave = fabricCanvas.getObjects().filter((obj) => {
         const extObj = obj as ExtendedFabricObject;
         return !extObj.isGridLine && !extObj.isStage && !extObj.isObstruction && !(obj instanceof Text);
       });
 
-      // Create a clean layout data structure
+      // Serialize with custom properties
+      const serializedObjects = objectsToSave.map(obj => {
+        const extObj = obj as ExtendedFabricObject;
+        const json = obj.toJSON();
+        return {
+          ...json,
+          itemType: extObj.itemType,
+          chairNumber: extObj.chairNumber,
+          rowName: extObj.rowName,
+          itemName: extObj.itemName,
+          visibilityPercentage: extObj.visibilityPercentage
+        };
+      });
+
       const layoutData = {
         version: '5.3.0',
-        objects: objectsToSave.map(obj => {
-          const json = obj.toJSON();
-          const extObj = obj as ExtendedFabricObject;
-          return {
-            ...json,
-            visibilityPercentage: extObj.visibilityPercentage
-          };
-        })
+        objects: serializedObjects
       };
       
-      // @ts-ignore - custom_layout_data column exists but types haven't refreshed yet
       const { error } = await supabase
         .from("venue_halls")
         .update({ custom_layout_data: JSON.stringify(layoutData) })
@@ -533,7 +654,7 @@ export const HallLayoutEditor = ({
 
       if (error) throw error;
 
-      toast.success("Layout saved successfully!");
+      toast.success("Hall layout saved successfully!");
       onLayoutSaved?.();
     } catch (error) {
       console.error("Error saving layout:", error);
@@ -562,31 +683,66 @@ export const HallLayoutEditor = ({
           hasSelection={hasSelection}
           zoom={zoom}
         />
-        <CardContent className="p-6 bg-muted/30">
+        <CardContent className="p-6 bg-muted/30 space-y-4">
+          {editingLabel && (
+            <div className="flex items-center gap-2 p-4 bg-card border border-border rounded-lg">
+              <Label className="font-semibold">Rename:</Label>
+              <Input
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+                placeholder="Enter name or number"
+                className="flex-1"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') applyLabelChange();
+                  if (e.key === 'Escape') setEditingLabel(false);
+                }}
+              />
+              <Button onClick={applyLabelChange} size="sm">Apply</Button>
+              <Button onClick={() => setEditingLabel(false)} size="sm" variant="outline">Cancel</Button>
+            </div>
+          )}
+          
+          {hasSelection && !editingLabel && (
+            <div className="flex justify-center">
+              <Button onClick={renameSelected} size="sm" variant="secondary">
+                Rename Selected Item
+              </Button>
+            </div>
+          )}
+
           <div className="flex justify-center items-center overflow-auto">
             <canvas ref={canvasRef} className="border-2 border-border rounded-lg shadow-lg" />
           </div>
-          <div className="mt-4 space-y-2">
-            <div className="text-sm text-muted-foreground text-center">
-              <p>
-                Hall dimensions: {hallLength}' × {hallWidth}' • 
-                {gridEnabled ? " Grid snapping enabled" : " Free placement"} • 
-                {panMode ? " Pan mode active" : " Selection mode"}
-              </p>
-            </div>
+          <div className="mt-4 text-sm text-muted-foreground text-center">
+            <p>
+              Hall dimensions: {hallLength}' × {hallWidth}' • 
+              {gridEnabled ? " Grid snapping enabled" : " Free placement"} • 
+              {panMode ? " Pan mode active" : " Selection mode"}
+            </p>
+            <p className="mt-2 text-xs">
+              💡 <strong>Tip:</strong> Add rows and chairs, then select any item and click "Rename Selected Item" to customize labels
+            </p>
             {hasStage && (
-              <div className="flex items-center justify-center gap-4 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(90) }}></div>
-                  <span>Excellent (80-100%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(65) }}></div>
-                  <span>Good (50-79%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(30) }}></div>
-                  <span>Limited (&lt;50%)</span>
+              <div className="mt-4 p-3 bg-card rounded-lg">
+                <p className="font-semibold mb-2">Stage Visibility Legend:</p>
+                <div className="flex justify-center gap-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(100) }}></div>
+                    <span>Excellent (80-100%)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(70) }}></div>
+                    <span>Good (60-80%)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(50) }}></div>
+                    <span>Fair (40-60%)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: StageVisibilityCalculator.getVisibilityColor(30) }}></div>
+                    <span>Poor (&lt;40%)</span>
+                  </div>
                 </div>
               </div>
             )}

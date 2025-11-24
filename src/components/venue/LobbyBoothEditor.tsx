@@ -4,11 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LayoutEditorToolbar } from "./LayoutEditorToolbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface ExtendedFabricObject extends FabricObject {
   isGridLine?: boolean;
   isBooth?: boolean;
   boothNumber?: string;
+  boothLabel?: Text;
 }
 
 interface LobbyBoothEditorProps {
@@ -34,6 +38,8 @@ export const LobbyBoothEditor = ({
   const [zoom, setZoom] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [boothCounter, setBoothCounter] = useState(1);
+  const [editingLabel, setEditingLabel] = useState(false);
+  const [labelInput, setLabelInput] = useState("");
 
   const GRID_SIZE = 20;
   const SCALE_FACTOR = 5;
@@ -55,6 +61,15 @@ export const LobbyBoothEditor = ({
         e.target.set({
           left: Math.round((e.target.left || 0) / GRID_SIZE) * GRID_SIZE,
           top: Math.round((e.target.top || 0) / GRID_SIZE) * GRID_SIZE,
+        });
+      }
+      
+      const extObj = e.target as ExtendedFabricObject;
+      // Update label position if it exists
+      if (extObj.boothLabel) {
+        extObj.boothLabel.set({
+          left: (extObj.left || 0) + (extObj.width || 0) / 2,
+          top: (extObj.top || 0) + (extObj.height || 0) / 2,
         });
       }
     });
@@ -139,7 +154,7 @@ export const LobbyBoothEditor = ({
   const addBooth = () => {
     if (!fabricCanvas) return;
 
-    const boothNumber = `B${boothCounter}`;
+    const boothNumber = `Booth ${boothCounter}`;
     const boothRect = new Rect({
       left: 100,
       top: 100,
@@ -155,16 +170,18 @@ export const LobbyBoothEditor = ({
     boothRect.boothNumber = boothNumber;
 
     const label = new Text(boothNumber, {
-      left: 150,
-      top: 150,
+      left: 100 + 50,
+      top: 100 + 50,
       fontSize: 14,
       fontWeight: "bold",
-      fill: "hsl(var(--accent-foreground))",
+      fill: "white",
       originX: "center",
       originY: "center",
       selectable: false,
       evented: false,
     });
+
+    boothRect.boothLabel = label;
 
     fabricCanvas.add(boothRect);
     fabricCanvas.add(label);
@@ -172,7 +189,7 @@ export const LobbyBoothEditor = ({
     fabricCanvas.renderAll();
     
     setBoothCounter(boothCounter + 1);
-    toast.success(`Booth ${boothNumber} added`);
+    toast.success(`${boothNumber} added - Select and rename as needed`);
   };
 
   const deleteSelected = () => {
@@ -182,12 +199,52 @@ export const LobbyBoothEditor = ({
     if (activeObjects.length === 0) return;
 
     activeObjects.forEach((obj) => {
+      const extObj = obj as ExtendedFabricObject;
+      // Remove booth label if exists
+      if (extObj.boothLabel) {
+        fabricCanvas.remove(extObj.boothLabel);
+      }
       fabricCanvas.remove(obj);
     });
 
     fabricCanvas.discardActiveObject();
     fabricCanvas.renderAll();
     toast.success("Object(s) deleted");
+  };
+
+  const renameBooth = () => {
+    if (!fabricCanvas) return;
+    const activeObject = fabricCanvas.getActiveObject() as ExtendedFabricObject;
+    if (!activeObject || !activeObject.isBooth) return;
+
+    setLabelInput(activeObject.boothNumber || "");
+    setEditingLabel(true);
+  };
+
+  const applyLabelChange = () => {
+    if (!fabricCanvas || !labelInput.trim()) {
+      setEditingLabel(false);
+      return;
+    }
+
+    const activeObject = fabricCanvas.getActiveObject() as ExtendedFabricObject;
+    if (!activeObject || !activeObject.isBooth) {
+      setEditingLabel(false);
+      return;
+    }
+
+    // Update the booth number
+    activeObject.boothNumber = labelInput;
+
+    // Update the label text
+    if (activeObject.boothLabel) {
+      activeObject.boothLabel.set({ text: labelInput });
+    }
+
+    fabricCanvas.renderAll();
+    toast.success(`Renamed to "${labelInput}"`);
+    setEditingLabel(false);
+    setLabelInput("");
   };
 
   const handleZoomIn = () => {
@@ -295,9 +352,20 @@ export const LobbyBoothEditor = ({
         return !extObj.isGridLine && !(obj instanceof Text);
       });
 
+      // Serialize with custom properties
+      const serializedObjects = objectsToSave.map(obj => {
+        const extObj = obj as ExtendedFabricObject;
+        const json = obj.toJSON();
+        return {
+          ...json,
+          isBooth: extObj.isBooth,
+          boothNumber: extObj.boothNumber,
+        };
+      });
+
       const layoutData = {
         version: '5.3.0',
-        objects: objectsToSave.map(obj => obj.toJSON())
+        objects: serializedObjects
       };
       
       const { error } = await supabase
@@ -336,7 +404,34 @@ export const LobbyBoothEditor = ({
           hasSelection={hasSelection}
           zoom={zoom}
         />
-        <CardContent className="p-6 bg-muted/30">
+        <CardContent className="p-6 bg-muted/30 space-y-4">
+          {editingLabel && (
+            <div className="flex items-center gap-2 p-4 bg-card border border-border rounded-lg">
+              <Label className="font-semibold">Rename Booth:</Label>
+              <Input
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+                placeholder="Enter booth name"
+                className="flex-1"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') applyLabelChange();
+                  if (e.key === 'Escape') setEditingLabel(false);
+                }}
+              />
+              <Button onClick={applyLabelChange} size="sm">Apply</Button>
+              <Button onClick={() => setEditingLabel(false)} size="sm" variant="outline">Cancel</Button>
+            </div>
+          )}
+          
+          {hasSelection && !editingLabel && (
+            <div className="flex justify-center">
+              <Button onClick={renameBooth} size="sm" variant="secondary">
+                Rename Selected Booth
+              </Button>
+            </div>
+          )}
+
           <div className="flex justify-center items-center overflow-auto">
             <canvas ref={canvasRef} className="border-2 border-border rounded-lg shadow-lg" />
           </div>
@@ -345,6 +440,9 @@ export const LobbyBoothEditor = ({
               Lobby dimensions: {lobbyLength}' × {lobbyWidth}' • 
               {gridEnabled ? " Grid snapping enabled" : " Free placement"} • 
               {panMode ? " Pan mode active" : " Selection mode"}
+            </p>
+            <p className="mt-2 text-xs">
+              💡 <strong>Tip:</strong> Click "Add Table" to add booths, then select any booth and click "Rename Selected Booth" to customize
             </p>
           </div>
         </CardContent>
