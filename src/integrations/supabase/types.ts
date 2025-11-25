@@ -1811,6 +1811,7 @@ export type Database = {
           id: string
           invitation_image_url: string | null
           invitation_message: string | null
+          invitation_placeholders: Json | null
           invitation_title: string | null
           is_published: boolean | null
           published_at: string | null
@@ -1830,6 +1831,7 @@ export type Database = {
           id?: string
           invitation_image_url?: string | null
           invitation_message?: string | null
+          invitation_placeholders?: Json | null
           invitation_title?: string | null
           is_published?: boolean | null
           published_at?: string | null
@@ -1849,6 +1851,7 @@ export type Database = {
           id?: string
           invitation_image_url?: string | null
           invitation_message?: string | null
+          invitation_placeholders?: Json | null
           invitation_title?: string | null
           is_published?: boolean | null
           published_at?: string | null

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Sparkles, Eye } from "lucide-react";
+import { Upload, Sparkles, Eye, Edit, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CreateInvitationModal } from "@/components/event/CreateInvitationModal";
+import { InvitationEditor, PlaceholderData } from "@/components/event/InvitationEditor";
 
 interface PersonalInvitationTabProps {
   eventId: string;
@@ -21,6 +22,8 @@ const PersonalInvitationTab = ({ eventId, event }: PersonalInvitationTabProps) =
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
+  const [placeholders, setPlaceholders] = useState<PlaceholderData[]>([]);
 
   useEffect(() => {
     fetchInvitation();
@@ -30,7 +33,7 @@ const PersonalInvitationTab = ({ eventId, event }: PersonalInvitationTabProps) =
     setLoading(true);
     const { data, error } = await supabase
       .from('personal_event_configurations')
-      .select('invitation_image_url, invitation_title, invitation_message')
+      .select('invitation_image_url, invitation_title, invitation_message, invitation_placeholders')
       .eq('event_id', eventId)
       .maybeSingle();
 
@@ -40,6 +43,9 @@ const PersonalInvitationTab = ({ eventId, event }: PersonalInvitationTabProps) =
       setInvitationUrl(data.invitation_image_url);
       setInvitationTitle(data.invitation_title || "");
       setInvitationMessage(data.invitation_message || "");
+      if (data.invitation_placeholders) {
+        setPlaceholders(data.invitation_placeholders as unknown as PlaceholderData[]);
+      }
     }
     setLoading(false);
   };
@@ -118,8 +124,51 @@ const PersonalInvitationTab = ({ eventId, event }: PersonalInvitationTabProps) =
     setSaving(false);
   };
 
+  const handlePlaceholdersSave = async (updatedPlaceholders: PlaceholderData[]) => {
+    try {
+      const { error } = await supabase
+        .from("personal_event_configurations")
+        .update({
+          invitation_placeholders: updatedPlaceholders as any,
+        })
+        .eq("event_id", eventId);
+
+      if (error) throw error;
+
+      setPlaceholders(updatedPlaceholders);
+      
+      toast({
+        title: "Success",
+        description: "Invitation layout saved successfully.",
+      });
+    } catch (error: any) {
+      console.error("Error saving placeholders:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save invitation layout.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading invitation...</div>;
+  }
+
+  if (showEditor && invitationUrl) {
+    return (
+      <div className="space-y-4">
+        <Button variant="outline" onClick={() => setShowEditor(false)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Invitation
+        </Button>
+        <InvitationEditor
+          imageUrl={invitationUrl}
+          initialPlaceholders={placeholders}
+          onSave={handlePlaceholdersSave}
+        />
+      </div>
+    );
   }
 
   return (
@@ -158,12 +207,12 @@ const PersonalInvitationTab = ({ eventId, event }: PersonalInvitationTabProps) =
                     </label>
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant="secondary"
                     className="flex-1"
-                    onClick={() => setCreateModalOpen(true)}
+                    onClick={() => setShowEditor(true)}
                   >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Regenerate with AI
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Layout
                   </Button>
                 </div>
               </div>

@@ -44,7 +44,7 @@ const InvitationTab = ({ eventId, event }: InvitationTabProps) => {
       setInvitationTitle(data.invitation_title || "");
       setInvitationMessage(data.invitation_message || "");
       if (data.invitation_placeholders) {
-        setPlaceholders(data.invitation_placeholders as PlaceholderData[]);
+        setPlaceholders(data.invitation_placeholders as unknown as PlaceholderData[]);
       }
     }
     setLoading(false);
@@ -129,7 +129,7 @@ const InvitationTab = ({ eventId, event }: InvitationTabProps) => {
       const { error } = await supabase
         .from("event_configurations")
         .update({
-          invitation_placeholders: updatedPlaceholders,
+          invitation_placeholders: updatedPlaceholders as any,
         })
         .eq("event_id", eventId);
 
