@@ -4,15 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Upload, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Upload, Image as ImageIcon, Sparkles, Edit } from "lucide-react";
 import { CreateInvitationModal } from "./CreateInvitationModal";
 
 interface InvitationUploadProps {
   invitationUrl: string | null;
   onUploadSuccess: (url: string) => void;
+  onEditClick?: () => void;
 }
 
-export const InvitationUpload = ({ invitationUrl, onUploadSuccess }: InvitationUploadProps) => {
+export const InvitationUpload = ({ invitationUrl, onUploadSuccess, onEditClick }: InvitationUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -90,6 +91,12 @@ export const InvitationUpload = ({ invitationUrl, onUploadSuccess }: InvitationU
                   onChange={handleFileUpload}
                   className="hidden"
                 />
+                {onEditClick && (
+                  <Button variant="secondary" onClick={onEditClick} className="flex-1">
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Layout
+                  </Button>
+                )}
               </div>
             </div>
           ) : (
