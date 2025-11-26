@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Sparkles, Eye, Edit, ArrowLeft } from "lucide-react";
+import { Upload, Sparkles, Eye, Edit, ArrowLeft, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CreateInvitationModal } from "./CreateInvitationModal";
 import { InvitationEditor, PlaceholderData } from "./InvitationEditor";
+import { MeetingInvitationDialog } from "./MeetingInvitationDialog";
 
 interface InvitationTabProps {
   eventId: string;
@@ -24,6 +25,7 @@ const InvitationTab = ({ eventId, event }: InvitationTabProps) => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [placeholders, setPlaceholders] = useState<PlaceholderData[]>([]);
+  const [showCommunicationDialog, setShowCommunicationDialog] = useState(false);
 
   useEffect(() => {
     fetchInvitation();
@@ -180,6 +182,24 @@ const InvitationTab = ({ eventId, event }: InvitationTabProps) => {
         </p>
       </div>
 
+      {/* Communication Section */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">Send Communication</h3>
+              <p className="text-sm text-muted-foreground">
+                Send meeting invitations and announcements to organizations and individuals
+              </p>
+            </div>
+            <Button onClick={() => setShowCommunicationDialog(true)}>
+              <Send className="h-4 w-4 mr-2" />
+              Send Communication
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
@@ -291,6 +311,13 @@ const InvitationTab = ({ eventId, event }: InvitationTabProps) => {
       <CreateInvitationModal 
         open={createModalOpen} 
         onOpenChange={setCreateModalOpen}
+      />
+
+      <MeetingInvitationDialog
+        isOpen={showCommunicationDialog}
+        onClose={() => setShowCommunicationDialog(false)}
+        eventId={eventId}
+        eventName={event.name}
       />
     </div>
   );
