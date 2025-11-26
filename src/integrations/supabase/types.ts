@@ -1724,6 +1724,125 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_communication_recipients: {
+        Row: {
+          communication_id: string | null
+          created_at: string | null
+          id: string
+          organization_id: string | null
+          recipient_type: string
+          sent_status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          communication_id?: string | null
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+          recipient_type: string
+          sent_status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          communication_id?: string | null
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+          recipient_type?: string
+          sent_status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_communication_recipients_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_communications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_communication_recipients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_communication_templates: {
+        Row: {
+          created_at: string | null
+          default_subject: string | null
+          fields: Json
+          id: string
+          is_system_template: boolean | null
+          name: string
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_subject?: string | null
+          fields?: Json
+          id?: string
+          is_system_template?: boolean | null
+          name: string
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_subject?: string | null
+          fields?: Json
+          id?: string
+          is_system_template?: boolean | null
+          name?: string
+          template_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      outreach_communications: {
+        Row: {
+          content: Json
+          created_at: string | null
+          event_id: string | null
+          id: string
+          sender_id: string
+          sent_at: string | null
+          subject: string
+          template_type: string | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          sender_id: string
+          sent_at?: string | null
+          subject: string
+          template_type?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          sender_id?: string
+          sent_at?: string | null
+          subject?: string
+          template_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_communications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_events: {
         Row: {
           age_restriction: string | null
