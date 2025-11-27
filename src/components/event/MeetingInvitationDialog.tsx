@@ -53,6 +53,23 @@ export const MeetingInvitationDialog = ({
     }
   };
 
+  // Silent validation for button disabled state (no toasts)
+  const isFormValid = () => {
+    if (!subject.trim()) return false;
+    if (selectedRecipients.length === 0) return false;
+    if (!selectedTemplate) return false;
+
+    const template = communicationTemplates[selectedTemplate];
+    if (template) {
+      const requiredFields = template.fields.filter((f) => f.required);
+      const missingFields = requiredFields.filter((f) => !formData[f.name]);
+      if (missingFields.length > 0) return false;
+    }
+
+    return true;
+  };
+
+  // Validation with toast messages (for submit action)
   const validateForm = () => {
     if (!subject.trim()) {
       toast({
@@ -239,7 +256,7 @@ export const MeetingInvitationDialog = ({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPreview(true)} disabled={!validateForm()}>
+            <Button variant="outline" onClick={() => setShowPreview(true)} disabled={!isFormValid()}>
               <Eye className="h-4 w-4 mr-2" />
               Preview
             </Button>
